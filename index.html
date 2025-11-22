@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Peak District Hikes Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet" />
+
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
+    #map {
+      position: absolute;
+      inset: 0;
+    }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+<script>
+  // use the same token you use for the flyovers
+  mapboxgl.accessToken = "pk.eyJ1IjoicmVtbWlhZ2JlYmkiLCJhIjoiY21odHRrYTQzMTk0bjJqcjE1b2xhZ2FraSJ9.nTCz33gX0gQt3T4A6VD0oQ";
+
+  // ---- EDIT THIS LIST ONLY ----
+  // lon, lat coordinates + links
+  const hikes = [
+    {
+      name: "Derwent Edge",
+      coords: [-1.694, 53.409],
+      hikeUrl: "https://your-site.com/hikes/derwent-edge",
+      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.409,-1.694"
+    },
+    {
+      name: "The Crashed Plane Hike",
+      coords: [-1.8689, 53.4329],
+      hikeUrl: "https://your-site.com/hikes/crashed-plane",
+      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.4329,-1.8689"
+    },
+    {
+      name: "Kinder Scout",
+      coords: [-1.8743, 53.3832],
+      hikeUrl: "https://your-site.com/hikes/kinder-scout",
+      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.3832,-1.8743"
+    }
+  ];
+  // ------------------------------
+
+  // simple map setup
+  const map = new mapboxgl.Map({
+    container: "map",
+    style: "mapbox://styles/mapbox/outdoors-v12",
+    center: [-1.78, 53.41], // rough centre of the above points
+    zoom: 10
+  });
+
+  map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
+
+  map.on("load", () => {
+    hikes.forEach(h => {
+      const popupHtml = `
+        <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; font-size:14px;">
+          <div style="font-weight:600; margin-bottom:4px;">${h.name}</div>
+          <div style="margin-bottom:2px;">
+            <a href="${h.hikeUrl}" target="_blank" rel="noopener">Hike Page</a>
+          </div>
+          <div>
+            <a href="${h.directionsUrl}" target="_blank" rel="noopener">Directions</a>
+          </div>
+        </div>
+      `;
+
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(popupHtml);
+
+      new mapboxgl.Marker({ color: "#EC2629" })
+        .setLngLat(h.coords)
+        .setPopup(popup)
+        .addTo(map);
+    });
+  });
+</script>
+</body>
+</html>
