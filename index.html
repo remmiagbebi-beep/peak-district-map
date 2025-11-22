@@ -22,38 +22,35 @@
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
 <script>
-  // use the same token you use for the flyovers
   mapboxgl.accessToken = "pk.eyJ1IjoicmVtbWlhZ2JlYmkiLCJhIjoiY21odHRrYTQzMTk0bjJqcjE1b2xhZ2FraSJ9.nTCz33gX0gQt3T4A6VD0oQ";
 
-  // ---- EDIT THIS LIST ONLY ----
-  // lon, lat coordinates + links
+  // ---- EDIT THIS LIST FOR YOUR HIKES ----
   const hikes = [
     {
       name: "Derwent Edge",
       coords: [-1.694, 53.409],
-      hikeUrl: "https://your-site.com/hikes/derwent-edge",
+      hikeUrl: "https://thelostpeak.co.uk/hikes/derwent-edge",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.409,-1.694"
     },
     {
       name: "The Crashed Plane Hike",
       coords: [-1.8689, 53.4329],
-      hikeUrl: "https://your-site.com/hikes/crashed-plane",
+      hikeUrl: "https://thelostpeak.co.uk/hikes/crashed-plane",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.4329,-1.8689"
     },
     {
       name: "Kinder Scout",
       coords: [-1.8743, 53.3832],
-      hikeUrl: "https://your-site.com/hikes/kinder-scout",
+      hikeUrl: "https://thelostpeak.co.uk/hikes/kinder-scout",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.3832,-1.8743"
     }
   ];
-  // ------------------------------
+  // ----------------------------------------
 
-  // simple map setup
   const map = new mapboxgl.Map({
     container: "map",
-    style: "mapbox://styles/mapbox/outdoors-v12",
-    center: [-1.78, 53.41], // rough centre of the above points
+    style: "mapbox://styles/mapbox/satellite-streets-v12",  // SATELLITE VIEW
+    center: [-1.78, 53.41],
     zoom: 10
   });
 
