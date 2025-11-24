@@ -29,6 +29,12 @@
       text-decoration: none;
       font-weight: 600;
     }
+
+    /* Popup arrow colour */
+    .mapboxgl-popup-tip {
+      border-top-color: #EC2629 !important;
+      border-bottom-color: #EC2629 !important;
+    }
   </style>
 </head>
 <body>
@@ -104,10 +110,8 @@
 
   function applyHoverState(){
     rafToken = null;
-
     Object.keys(routeLayerId).forEach(id => setRouteColor(id, RED));
     Object.keys(markerElsById).forEach(id => setMarkerColor(id, RED));
-
     if(hoveredId){
       setRouteColor(hoveredId, BLUE);
       setMarkerColor(hoveredId, BLUE);
@@ -158,7 +162,6 @@
 
   map.on("load", async () => {
 
-    // markers
     hikes.forEach(h => {
       const popupHtml = `
         <div>
@@ -185,12 +188,10 @@
     const bounds = new mapboxgl.LngLatBounds();
     hikes.forEach(h => bounds.extend(h.coords));
 
-    // routes
     await Promise.all(
       hikes.map(async h => {
         const line = await loadGpxAsLine(h.gpx);
         addRouteLayer(h.id, line);
-
         line.geometry.coordinates.forEach(c => bounds.extend(c));
 
         map.on("mouseenter", `route-lyr-${h.id}`, () => setHovered(h.id));
