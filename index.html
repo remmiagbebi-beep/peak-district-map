@@ -43,12 +43,21 @@
       text-transform:none;
     }
 
-    .specs { margin-top:6px; font-size:13px; }
+    /* centred block but each row left aligned */
+    .specs {
+      margin-top:6px;
+      font-size:13px;
+      display:flex;
+      flex-direction:column;
+      align-items:center; /* centres block */
+    }
+
     .spec-row {
       display:flex;
       align-items:center;
       gap:6px;
       margin:2px 0;
+      width:max-content; /* keeps left justified */
     }
 
     .icon {
@@ -61,6 +70,7 @@
     .spec-value {
       font-weight:800;
       color:#EC2629;
+      text-transform:none;
     }
 
     .popup-actions {
