@@ -11,15 +11,13 @@
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
 
-    /* Strong shadow around popup (box + arrow) */
     .mapboxgl-popup { filter: drop-shadow(0 14px 28px rgba(0,0,0,0.45)); }
 
-    /* Popup box */
     .mapboxgl-popup-content {
       background: #fff !important;
       color: #1E1E1E;
       border-radius: 12px !important;
-      border: none !important;                 /* no red border */
+      border: none !important;
       box-shadow: 0 10px 24px rgba(0,0,0,0.35) !important;
       font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
       padding: 12px 14px !important;
@@ -31,17 +29,15 @@
 
     .mapboxgl-popup-close-button { color: #333 !important; }
 
-    /* Arrow white + slight overlap to avoid seam */
     .mapboxgl-popup-tip {
       border-top-color: #fff !important;
       border-bottom-color: #fff !important;
       margin-top: -2px;
     }
 
-    /* Title: centred and split to max 2 words per line (handled in JS with <br>) */
     .popup-heading {
       font-weight: 700;
-      font-size: 15px;    /* slightly smaller */
+      font-size: 15px;
       line-height: 1.35;
       margin-bottom: 6px;
       color: #1E1E1E;
@@ -49,16 +45,31 @@
       text-align: center;
     }
 
-    /* Specs block styles (reduced spacing) */
+    /* Specs: tighter spacing and icon + value on one line */
     .specs { margin-top: 6px; text-align: left; font-size: 13px; }
-    .spec-row { margin: 2px 0; letter-spacing: 0.2px; }  /* tighter */
-    .spec-label { font-weight: 800; color: #1E1E1E; margin-right: 4px; text-transform: none; }
-    .spec-value { font-weight: 800; color: #EC2629; text-transform: none; }
+    .spec-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;               /* single-space feel between icon and text */
+      margin: 2px 0;          /* reduced spacing as requested */
+      letter-spacing: 0.2px;
+    }
+    .icon {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 16px;
+      color: #1E1E1E;         /* icon colour */
+    }
+    .spec-value {
+      font-weight: 800;
+      color: #EC2629;
+      text-transform: none;
+    }
+
     .stars { display: inline-block; line-height: 1; font-size: 16px; vertical-align: -1px; }
     .star { color: #EC2629; }
     .star.off { color: rgba(236,38,41,0.25); }
 
-    /* Bottom action links on one line at the bottom */
     .popup-actions {
       display: flex;
       gap: 14px;
@@ -89,7 +100,6 @@
   const RED  = "#EC2629";
   const BLUE = "#3899EC";
 
-  /* Hike data + popup specs (capitalised text, not all caps) */
   const hikes = [
     {
       id: "derwent-edge",
@@ -98,15 +108,7 @@
       hikeUrl: "https://thelostpeak.co.uk/hikes/derwent-edge",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.400582126300236,-1.7427849606990842",
       gpx: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Derwent%20Edge.gpx",
-      specs: {
-        duration: "3 to 4 hours",
-        length: "7.4 miles",
-        type: "Circular",
-        ascent: "367m",
-        difficulty: 3,
-        rating: 4,
-        crowd: "Very Low"
-      }
+      specs: { duration: "3 to 4 hours", length: "7.4 miles", type: "Circular", ascent: "367m", difficulty: 3, rating: 4, crowd: "Very Low" }
     },
     {
       id: "crashed-plane",
@@ -115,15 +117,7 @@
       hikeUrl: "https://thelostpeak.co.uk/hikes/crashed-plane",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.4329,-1.8689",
       gpx: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/The%20Crashed%20Plane%20Hike.gpx",
-      specs: {
-        duration: "2 to 3 hours",
-        length: "3.6 miles",
-        type: "Circular",
-        ascent: "145m",
-        difficulty: 3,
-        rating: 2,
-        crowd: "Very High"
-      }
+      specs: { duration: "2 to 3 hours", length: "3.6 miles", type: "Circular", ascent: "145m", difficulty: 3, rating: 2, crowd: "Very High" }
     },
     {
       id: "kinder-scout",
@@ -132,15 +126,7 @@
       hikeUrl: "https://thelostpeak.co.uk/hikes/kinder-scout",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.364872107766416,-1.8151209383535991",
       gpx: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Kinder%20Scout%20Hike.gpx",
-      specs: {
-        duration: "4 to 6 hours",
-        length: "8.3 miles",
-        type: "Circular",
-        ascent: "562m",
-        difficulty: 5,
-        rating: 5,
-        crowd: "Low"
-      }
+      specs: { duration: "4 to 6 hours", length: "8.3 miles", type: "Circular", ascent: "562m", difficulty: 5, rating: 5, crowd: "Low" }
     }
   ];
 
@@ -156,7 +142,6 @@
   const markerElsById = {};
   const routeLayerId = {};
 
-  // unified hover for simultaneous marker + route highlight
   let hoveredId = null;
   let rafToken = null;
 
@@ -200,28 +185,55 @@
     return `<span class="stars">${[...on].map(()=>'<span class="star">★</span>').join('')}${[...off].map(()=>'<span class="star off">★</span>').join('')}</span>`;
   }
 
-  function specsHTML(s){
+  /* Inline SVG icons (use currentColor so they follow .icon colour) */
+  const icons = {
+    clock: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v6l4 2"></path>
+            </svg>`,
+    length: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+               <path d="M3 8h18M3 16h18"></path>
+               <path d="M6 8v8M10 8v8M14 8v8M18 8v8"></path>
+             </svg>`,
+    loop: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+             <path d="M3 12a7 7 0 0 1 12-4"></path>
+             <polyline points="15 3 15 8 20 8"></polyline>
+             <path d="M21 12a7 7 0 0 1-12 4"></path>
+             <polyline points="9 21 9 16 4 16"></polyline>
+           </svg>`,
+    ascent: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+               <path d="M3 20h18"></path>
+               <path d="M6 18l5-6 4 4 5-7"></path>
+               <path d="M20 7h-5v5"></path>
+             </svg>`,
+    people: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+               <circle cx="8" cy="8" r="3"></circle>
+               <circle cx="16" cy="8" r="3"></circle>
+               <path d="M2 20c0-3.5 3-6 6-6s6 2.5 6 6"></path>
+               <path d="M10 20c0-2.8 2.2-5 5-5s5 2.2 5 5"></path>
+             </svg>`
+  };
+
+  function specsHTML(s, urls){
     return `
       <div class="specs">
-        <div class="spec-row"><span class="spec-label">Duration:</span> <span class="spec-value">${s.duration}</span></div>
-        <div class="spec-row"><span class="spec-label">Length:</span> <span class="spec-value">${s.length}</span></div>
-        <div class="spec-row"><span class="spec-label">Type:</span> <span class="spec-value">${s.type}</span></div>
-        <div class="spec-row"><span class="spec-label">Total Ascent:</span> <span class="spec-value">${s.ascent}</span></div>
-        <div class="spec-row"><span class="spec-label">Difficulty:</span> ${starsHTML(s.difficulty)}</div>
-        <div class="spec-row"><span class="spec-label">Our Rating:</span> ${starsHTML(s.rating)}</div>
-        <div class="spec-row"><span class="spec-label">Crowd Levels:</span> <span class="spec-value">${s.crowd}</span></div>
+        <div class="spec-row">${icons.clock}<span class="spec-value">${s.duration}</span></div>
+        <div class="spec-row">${icons.length}<span class="spec-value">${s.length}</span></div>
+        <div class="spec-row">${icons.loop}<span class="spec-value">${s.type}</span></div>
+        <div class="spec-row">${icons.ascent}<span class="spec-value">${s.ascent}</span></div>
+        <div class="spec-row">${/* label replaced by star icons */''}<div class="icon" style="width:0;height:0;"></div><span style="font-weight:800;color:#1E1E1E;margin-right:6px;">Difficulty</span> ${starsHTML(s.difficulty)}</div>
+        <div class="spec-row"><div class="icon" style="width:0;height:0;"></div><span style="font-weight:800;color:#1E1E1E;margin-right:6px;">Our Rating</span> ${starsHTML(s.rating)}</div>
+        <div class="spec-row">${icons.people}<span class="spec-value">${s.crowd}</span></div>
 
-        <!-- bottom actions on one line -->
         <div class="popup-actions">
-          <a class="popup-link" href="${s.hikeUrlPlaceholder || '#'}" target="_blank" rel="noopener">Hike Page</a>
+          <a class="popup-link" href="${urls.hikeUrl}" target="_blank" rel="noopener">Hike Page</a>
           <span aria-hidden="true">•</span>
-          <a class="popup-link" href="${s.directionsUrlPlaceholder || '#'}" target="_blank" rel="noopener">Directions</a>
+          <a class="popup-link" href="${urls.directionsUrl}" target="_blank" rel="noopener">Directions</a>
         </div>
       </div>
     `;
   }
 
-  /* Title wrapper: insert <br> after every 2 words so max two words per line */
   function wrapTitleTwoWordsPerLine(name){
     const words = name.trim().split(/\s+/);
     const lines = [];
@@ -231,14 +243,11 @@
     return lines.join('<br>');
   }
 
-  // helper to build popup with actions at bottom on one line
   function popupHtmlFor(h){
-    // inject real urls for the bottom actions
-    const specsWithLinks = { ...h.specs, hikeUrlPlaceholder: h.hikeUrl, directionsUrlPlaceholder: h.directionsUrl };
     return `
       <div>
         <div class="popup-heading">${wrapTitleTwoWordsPerLine(h.name)}</div>
-        ${specsHTML(specsWithLinks)}
+        ${specsHTML(h.specs, {hikeUrl: h.hikeUrl, directionsUrl: h.directionsUrl})}
       </div>
     `;
   }
@@ -257,7 +266,6 @@
   function addRouteLayer(id, lineFeature){
     const sourceId = `route-src-${id}`;
     const layerId  = `route-lyr-${id}`;
-
     if(!map.getSource(sourceId)){
       map.addSource(sourceId, { type:"geojson", data: lineFeature });
     }
@@ -280,7 +288,6 @@
   }
 
   map.on("load", async () => {
-    // markers + popups
     const bounds = new mapboxgl.LngLatBounds();
 
     hikes.forEach(h => {
@@ -295,30 +302,22 @@
       el.style.cursor = "pointer";
       markerElsById[h.id] = el;
 
-      // hover highlighting
       el.addEventListener("mouseenter", () => setHovered(h.id));
       el.addEventListener("mouseleave", () => setHovered(null));
 
-      // mobile tap: centre without zoom
       el.addEventListener("click", () => {
-        if (window.innerWidth < 700) {
-          map.easeTo({ center: h.coords, duration: 400 });
-        }
+        if (window.innerWidth < 700) map.easeTo({ center: h.coords, duration: 400 });
       });
     });
 
-    // routes
     await Promise.all(hikes.map(async h => {
       try{
         const line = await loadGpxAsLine(h.gpx);
         const layerId = addRouteLayer(h.id, line);
         line.geometry.coordinates.forEach(c => bounds.extend(c));
-
         map.on("mouseenter", layerId, () => setHovered(h.id));
         map.on("mouseleave", layerId, () => setHovered(null));
-      }catch(e){
-        console.warn(e.message || e);
-      }
+      }catch(e){ console.warn(e.message || e); }
     }));
 
     map.fitBounds(bounds, { padding: 80 });
