@@ -21,7 +21,6 @@
   const RED  = "#EC2629";
   const BLUE = "#3899EC";
 
-  // ---- HIKES (with your latest coords) ----
   const hikes = [
     {
       id: "derwent-edge",
@@ -48,7 +47,6 @@
       gpx: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Kinder%20Scout%20Hike.gpx"
     }
   ];
-  // -----------------------------------------
 
   const map = new mapboxgl.Map({
     container: "map",
@@ -59,35 +57,23 @@
 
   map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
 
-  // Keep references so we can highlight matching marker/route
-  const markersById = {};     // id -> mapboxgl.Marker
-  const markerElsById = {};   // id -> HTMLElement of the marker
-  const routeLayerId = {};    // id -> line layer id
+  const markersById = {};
+  const markerElsById = {};
+  const routeLayerId = {};
 
-  // Utility: change default marker colour (works on Mapbox default SVG marker)
   function setMarkerColor(id, color){
     const el = markerElsById[id];
     if(!el) return;
     const svgPath = el.querySelector('svg path');
-    if(svgPath){
-      svgPath.setAttribute('fill', color);
-    }else{
-      // fallback if structure differs
-      el.style.color = color;
-    }
+    if(svgPath) svgPath.setAttribute('fill', color);
   }
 
-  // Hover handlers for a specific hike id
   function highlightOn(id){
-    // route line -> blue
     const lyr = routeLayerId[id];
     if(lyr && map.getLayer(lyr)){
       map.setPaintProperty(lyr, "line-color", BLUE);
-      // keep same width to avoid visual "jump"
     }
-    // marker -> blue
     setMarkerColor(id, BLUE);
-    // pointer cursor
     map.getCanvas().style.cursor = "pointer";
   }
   function highlightOff(id){
@@ -99,7 +85,6 @@
     map.getCanvas().style.cursor = "";
   }
 
-  // GPX loader
   async function loadGpxAsLine(gpxUrl){
     const res = await fetch(gpxUrl);
     if(!res.ok) throw new Error("GPX fetch failed: " + gpxUrl);
@@ -126,7 +111,10 @@
         paint: {
           "line-color": RED,
           "line-width": 4,
-          "line-opacity": 0.95
+          "line-opacity": 0.95,
+          /* make colour + width changes instantaneous */
+          "line-color-transition": { duration: 0, delay: 0 },
+          "line-width-transition": { duration: 0, delay: 0 }
         }
       });
     }
@@ -135,7 +123,6 @@
   }
 
   map.on("load", async () => {
-    // Markers + popups (use Mapbox default marker for stability)
     hikes.forEach(h => {
       const popupHtml = `
         <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; font-size:14px;">
@@ -148,43 +135,32 @@
           </div>
         </div>
       `;
-
       const marker = new mapboxgl.Marker({ color: RED })
         .setLngLat(h.coords)
         .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupHtml))
         .addTo(map);
 
-      // Save refs
       markersById[h.id] = marker;
       const el = marker.getElement();
+      el.style.cursor = "pointer";
       markerElsById[h.id] = el;
 
-      // Pointer + hover colouring
-      el.style.cursor = "pointer";
       el.addEventListener("mouseenter", () => highlightOn(h.id));
       el.addEventListener("mouseleave", () => highlightOff(h.id));
     });
 
-    // Bounds
     const bounds = new mapboxgl.LngLatBounds();
     hikes.forEach(h => bounds.extend(h.coords));
 
-    // Routes + hover handlers
     await Promise.all(hikes.map(async h => {
       if(!h.gpx) return;
       try{
         const line = await loadGpxAsLine(h.gpx);
         const layerId = addRouteLayer(h.id, line);
-
-        // include in bounds
         line.geometry.coordinates.forEach(c => bounds.extend(c));
 
-        // hover on route -> highlight its own marker and line
         map.on("mouseenter", layerId, () => highlightOn(h.id));
         map.on("mouseleave", layerId, () => highlightOff(h.id));
-        // ensure pointer on route too
-        map.on("mouseenter", layerId, () => map.getCanvas().style.cursor = "pointer");
-        map.on("mouseleave", layerId, () => map.getCanvas().style.cursor = "");
       }catch(e){
         console.warn(e.message || e);
       }
