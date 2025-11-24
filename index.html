@@ -34,7 +34,7 @@
       margin-top:-2px;
     }
 
-    /* CLOSE BUTTON ADJUSTED */
+    /* Close button (bigger + offset) */
     .mapboxgl-popup-close-button {
       color:#333 !important;
       font-size:22px !important;
@@ -53,6 +53,7 @@
       text-transform:none;
     }
 
+    /* centre the block, keep rows left-justified */
     .specs {
       margin-top:6px;
       font-size:13px;
@@ -84,7 +85,7 @@
 
     .popup-actions {
       display:flex;
-      gap:6px;
+      gap:6px;               /* tight “Hike Page & Directions” */
       justify-content:center;
       align-items:center;
       margin-top:10px;
@@ -97,7 +98,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* remove focus rings */
+    /* remove focus rings in popups */
     .popup-link:focus,
     .popup-link:focus-visible,
     .popup-link:active,
@@ -215,7 +216,7 @@ function specsHTML(s,urls){
       <div class="spec-row">${icons.ascent}<span class="spec-value">${s.ascent}</span></div>
 
       <div class="popup-actions">
-        <a class="popup-link" tabindex="-1" href="${urls.hikeUrl}" target="_blank">Hike</a>
+        <a class="popup-link" tabindex="-1" href="${urls.hikeUrl}" target="_blank">Hike Page</a>
         <span style="font-weight:800;">&amp;</span>
         <a class="popup-link" tabindex="-1" href="${urls.directionsUrl}" target="_blank">Directions</a>
       </div>
