@@ -18,14 +18,14 @@
 <script>
   mapboxgl.accessToken = "pk.eyJ1IjoicmVtbWlhZ2JlYmkiLCJhIjoiY21odHRrYTQzMTk0bjJqcjE1b2xhZ2FraSJ9.nTCz33gX0gQt3T4A6VD0oQ";
 
-  // ---- EDIT THIS LIST FOR YOUR HIKES ----
+  // ---- HIKES (updated coords for Derwent Edge + Kinder Scout) ----
   const hikes = [
     {
       id: "derwent-edge",
       name: "Derwent Edge",
-      coords: [-1.694, 53.409],
+      coords: [-1.7417836422316026, 53.40078162833585],
       hikeUrl: "https://thelostpeak.co.uk/hikes/derwent-edge",
-      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.409,-1.694",
+      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.40078162833585,-1.7417836422316026",
       gpx: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Derwent%20Edge.gpx"
     },
     {
@@ -39,13 +39,13 @@
     {
       id: "kinder-scout",
       name: "Kinder Scout",
-      coords: [-1.8743, 53.3832],
+      coords: [-1.8151209383535991, 53.364872107766416],
       hikeUrl: "https://thelostpeak.co.uk/hikes/kinder-scout",
-      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.3832,-1.8743",
+      directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.364872107766416,-1.8151209383535991",
       gpx: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Kinder%20Scout%20Hike.gpx"
     }
   ];
-  // ----------------------------------------
+  // ----------------------------------------------------------------
 
   const map = new mapboxgl.Map({
     container: "map",
@@ -63,7 +63,6 @@
     const text = await res.text();
     const xml  = new DOMParser().parseFromString(text, "application/xml");
     const gj   = toGeoJSON.gpx(xml);
-    // grab first LineString found
     const line = gj.features.find(f => f.geometry && f.geometry.type === "LineString");
     if(!line) throw new Error("No LineString in GPX: " + gpxUrl);
     return line;
@@ -120,11 +119,9 @@
       try{
         const line = await loadGpxAsLine(h.gpx);
         addRouteLayer(h.id, line);
-        // extend bounds to include full route
         const coords = line.geometry.coordinates;
         coords.forEach(c => bounds.extend(c));
       }catch(e){
-        // fail silently for a single route
         console.warn(e.message || e);
       }
     }));
