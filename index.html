@@ -34,12 +34,12 @@
       margin-top:-2px;
     }
 
-    /* CLOSE BUTTON IMPROVED */
+    /* CLOSE BUTTON ADJUSTED */
     .mapboxgl-popup-close-button {
       color:#333 !important;
-      font-size:22px !important;          /* larger */
-      top:2px !important;                 /* moved down */
-      right:6px !important;               /* moved left */
+      font-size:22px !important;
+      top:6px !important;
+      right:8px !important;
       padding:2px 4px !important;
     }
 
@@ -97,7 +97,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Remove focus rings */
+    /* remove focus rings */
     .popup-link:focus,
     .popup-link:focus-visible,
     .popup-link:active,
@@ -215,7 +215,7 @@ function specsHTML(s,urls){
       <div class="spec-row">${icons.ascent}<span class="spec-value">${s.ascent}</span></div>
 
       <div class="popup-actions">
-        <a class="popup-link" tabindex="-1" href="${urls.hikeUrl}" target="_blank">Hike Page</a>
+        <a class="popup-link" tabindex="-1" href="${urls.hikeUrl}" target="_blank">Hike</a>
         <span style="font-weight:800;">&amp;</span>
         <a class="popup-link" tabindex="-1" href="${urls.directionsUrl}" target="_blank">Directions</a>
       </div>
@@ -308,5 +308,3 @@ map.on("load", async () => {
 </script>
 </body>
 </html>
-
-
