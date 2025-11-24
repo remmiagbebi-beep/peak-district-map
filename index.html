@@ -9,35 +9,31 @@
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
 
-    /* Strong, clear shadow around popup (box + arrow) */
-    .mapboxgl-popup {
-      filter: drop-shadow(0 12px 28px rgba(0,0,0,0.45));
-    }
+    /* Strong shadow for popup (box + arrow) */
+    .mapboxgl-popup { filter: drop-shadow(0 14px 28px rgba(0,0,0,0.45)); }
 
     /* Popup box */
     .mapboxgl-popup-content {
       background: #fff !important;
       color: #1E1E1E;
       border-radius: 12px !important;
-      border: none !important;            /* prevent hairline seam */
-      box-shadow: none !important;         /* shadow handled by parent for seamless arrow */
+      border: none !important;                 /* prevent hairline seam */
+      box-shadow: 0 10px 24px rgba(0,0,0,0.35) !important; /* extra visible shadow */
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       padding: 12px 14px !important;
       text-align: center;
-      max-width: 260px;                    /* wrap long titles */
+      max-width: 260px;                         /* wrap long titles */
       width: max-content;
       word-wrap: break-word;
     }
 
-    .mapboxgl-popup-close-button {
-      color: #333 !important;
-    }
+    .mapboxgl-popup-close-button { color: #333 !important; }
 
-    /* Popup arrow (match white background and remove seam) */
+    /* Popup arrow (match white and overlap to hide any gap) */
     .mapboxgl-popup-tip {
       border-top-color: #fff !important;
       border-bottom-color: #fff !important;
-      margin-top: -1px; /* overlap to hide any antialias gap */
+      margin-top: -1px;
     }
 
     .popup-heading {
@@ -45,7 +41,7 @@
       font-size: 16px;
       line-height: 1.2;
       margin-bottom: 6px;
-      color: #1E1E1E;  /* title colour per request */
+      color: #1E1E1E;   /* requested title colour */
     }
 
     .popup-link {
@@ -54,6 +50,16 @@
       font-weight: 600;
       display: inline-block;
       margin: 2px 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Remove initial focus outline/box on the first clicked link */
+    .popup-link:focus,
+    .popup-link:focus-visible,
+    .mapboxgl-popup-content a:focus,
+    .mapboxgl-popup-content a:focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
     }
   </style>
 </head>
@@ -210,14 +216,12 @@
     const bounds = new mapboxgl.LngLatBounds();
     hikes.forEach(h => bounds.extend(h.coords));
 
-    // routes
     await Promise.all(hikes.map(async h => {
       try{
         const line = await loadGpxAsLine(h.gpx);
         const layerId = addRouteLayer(h.id, line);
         line.geometry.coordinates.forEach(c => bounds.extend(c));
 
-        // hover only (no click-zoom)
         map.on("mouseenter", layerId, () => setHovered(h.id));
         map.on("mouseleave", layerId, () => setHovered(null));
       }catch(e){
@@ -225,7 +229,8 @@
       }
     }));
 
-    map.fitBounds(bounds, { padding: 40 });
+    /* Zoom out slightly more than before */
+    map.fitBounds(bounds, { padding: 80 }); // was 40
   });
 </script>
 </body>
