@@ -11,6 +11,8 @@
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
 
+    .marker { cursor:pointer !important; }
+
     .mapboxgl-popup { filter: drop-shadow(0 14px 28px rgba(0,0,0,0.45)); }
 
     .mapboxgl-popup-content {
@@ -35,7 +37,7 @@
 
     .popup-heading {
       font-weight:700;
-      font-size:14px; /* reduced */
+      font-size:14px;
       line-height:1.35;
       margin-bottom:6px;
       color:#1E1E1E;
@@ -43,13 +45,12 @@
       text-transform:none;
     }
 
-    /* centred block but keep each row left-aligned */
     .specs {
       margin-top:6px;
       font-size:13px;
       display:flex;
       flex-direction:column;
-      align-items:center; 
+      align-items:center;
     }
 
     .spec-row {
@@ -57,7 +58,7 @@
       align-items:center;
       gap:6px;
       margin:2px 0;
-      width:max-content; 
+      width:max-content;
     }
 
     .icon {
@@ -75,10 +76,12 @@
 
     .popup-actions {
       display:flex;
-      gap:14px;
+      gap:6px;               /* tighter */
       justify-content:center;
-      margin-top:14px; /* larger gap */
+      align-items:center;
+      margin-top:10px;       /* reduced */
     }
+
     .popup-link {
       color:#3899EC;
       font-weight:600;
@@ -132,7 +135,7 @@ const map = new mapboxgl.Map({
   container:"map",
   style:"mapbox://styles/mapbox/satellite-streets-v12",
   center:[-1.78,53.41],
-  zoom:9.4  /* zoomed OUT more */
+  zoom:9.4
 });
 
 map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
@@ -158,13 +161,17 @@ function setRouteColor(id,color){
 
 function applyHoverState(){
   rafToken=null;
+
   Object.keys(routeLayerId).forEach(id=>setRouteColor(id,RED));
   Object.keys(markerElsById).forEach(id=>setMarkerColor(id,RED));
+
   if(hoveredId){
     setRouteColor(hoveredId,BLUE);
     setMarkerColor(hoveredId,BLUE);
     map.getCanvas().style.cursor="pointer";
-  } else map.getCanvas().style.cursor="";
+  } else {
+    map.getCanvas().style.cursor="";
+  }
 }
 
 function setHovered(id){
@@ -187,7 +194,7 @@ function specsHTML(s,urls){
 
       <div class="popup-actions">
         <a class="popup-link" href="${urls.hikeUrl}" target="_blank">Hike Page</a>
-        <span>&amp;</span>
+        <span style="font-weight:800;">&amp;</span>
         <a class="popup-link" href="${urls.directionsUrl}" target="_blank">Directions</a>
       </div>
     </div>`;
@@ -218,8 +225,10 @@ async function loadGpx(gpxUrl){
 function addRoute(id,line){
   const src=`route-src-${id}`;
   const lyr=`route-lyr-${id}`;
+
   if(!map.getSource(src))
     map.addSource(src,{type:"geojson",data:line});
+
   if(!map.getLayer(lyr)){
     map.addLayer({
       id:lyr,
@@ -234,6 +243,7 @@ function addRoute(id,line){
       }
     });
   }
+
   routeLayerId[id]=lyr;
 }
 
@@ -246,8 +256,10 @@ map.on("load", async () => {
       .setPopup(new mapboxgl.Popup({offset:25}).setHTML(popupHtmlFor(h)))
       .addTo(map);
 
+    const el = marker.getElement();
+    el.classList.add("marker");
+
     bounds.extend(h.coords);
-    const el=marker.getElement();
     markerElsById[h.id]=el;
 
     el.addEventListener("mouseenter",()=>setHovered(h.id));
@@ -269,7 +281,6 @@ map.on("load", async () => {
     } catch(e){}
   }
 
-  /* zoom out more */
   map.fitBounds(bounds,{padding:120});
 });
 </script>
