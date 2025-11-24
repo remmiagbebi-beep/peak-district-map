@@ -9,40 +9,40 @@
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
 
-    /* Strong shadow for popup (box + arrow) */
+    /* Strong shadow around popup (box + arrow) */
     .mapboxgl-popup { filter: drop-shadow(0 14px 28px rgba(0,0,0,0.45)); }
 
     /* Popup box */
     .mapboxgl-popup-content {
-  background: #fff !important;
-  color: #1E1E1E;
-  border-radius: 12px !important;
-  border: 3px solid #EC2629 !important;   /* NEW red border */
-  box-shadow: 0 10px 24px rgba(0,0,0,0.35) !important;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  padding: 12px 14px !important;
-  text-align: center;
-  max-width: 260px;
-  width: max-content;
-  word-wrap: break-word;
-}
-
+      background: #fff !important;
+      color: #1E1E1E;
+      border-radius: 12px !important;
+      border: 3px solid #EC2629 !important;   /* red border */
+      box-shadow: 0 10px 24px rgba(0,0,0,0.35) !important;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      padding: 12px 14px !important;
+      text-align: center;
+      max-width: 260px;                        /* wrap long titles */
+      width: max-content;
+      word-wrap: break-word;
+    }
 
     .mapboxgl-popup-close-button { color: #333 !important; }
 
-    /* Popup arrow (match white and overlap to hide any gap) */
+    /* Popup arrow (white + overlap to kill seam) */
     .mapboxgl-popup-tip {
       border-top-color: #fff !important;
       border-bottom-color: #fff !important;
-      margin-top: -1px;
+      margin-top: -2px;
     }
 
     .popup-heading {
       font-weight: 800;
       font-size: 16px;
       line-height: 1.2;
-      margin-bottom: 6px;
-      color: #1E1E1E;   /* requested title colour */
+      margin-bottom: 8px;
+      color: #1E1E1E;
+      text-transform: uppercase;
     }
 
     .popup-link {
@@ -50,18 +50,44 @@
       text-decoration: none;
       font-weight: 600;
       display: inline-block;
-      margin: 2px 0;
+      margin: 4px 0 2px;
       -webkit-tap-highlight-color: transparent;
     }
-
-    /* Remove initial focus outline/box on the first clicked link */
-    .popup-link:focus,
-    .popup-link:focus-visible,
-    .mapboxgl-popup-content a:focus,
-    .mapboxgl-popup-content a:focus-visible {
-      outline: none !important;
-      box-shadow: none !important;
+    /* remove first-click focus box */
+    .popup-link:focus, .popup-link:focus-visible,
+    .mapboxgl-popup-content a:focus, .mapboxgl-popup-content a:focus-visible {
+      outline: none !important; box-shadow: none !important;
     }
+
+    /* Specs block styles (match your example) */
+    .specs {
+      margin-top: 8px;
+      text-align: center;
+      font-size: 13px;
+    }
+    .spec-row {
+      margin: 6px 0;
+      letter-spacing: 0.2px;
+    }
+    .spec-label {
+      font-weight: 800;
+      color: #1E1E1E;
+      margin-right: 4px;
+      text-transform: uppercase;
+    }
+    .spec-value {
+      font-weight: 800;
+      color: #EC2629; /* red values */
+      text-transform: uppercase;
+    }
+    .stars {
+      display: inline-block;
+      line-height: 1;
+      font-size: 16px;
+      margin-top: 2px;
+    }
+    .star { color: #EC2629; }                      /* filled */
+    .star.off { color: rgba(236,38,41,0.25); }     /* unfilled */
   </style>
 </head>
 <body>
@@ -75,6 +101,7 @@
   const RED  = "#EC2629";
   const BLUE = "#3899EC";
 
+  /* Hike data + popup specs */
   const hikes = [
     {
       id: "derwent-edge",
@@ -82,7 +109,16 @@
       coords: [-1.7427849606990842, 53.400582126300236],
       hikeUrl: "https://thelostpeak.co.uk/hikes/derwent-edge",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.400582126300236,-1.7427849606990842",
-      gpx: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Derwent%20Edge.gpx"
+      gpx: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Derwent%20Edge.gpx",
+      specs: {
+        duration: "3 - 4 hours",
+        length: "7.4 miles",
+        type: "Circular",
+        ascent: "367m",
+        difficulty: 3,
+        rating: 4,
+        crowd: "Very Low"
+      }
     },
     {
       id: "crashed-plane",
@@ -90,7 +126,16 @@
       coords: [-1.8689, 53.4329],
       hikeUrl: "https://thelostpeak.co.uk/hikes/crashed-plane",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.4329,-1.8689",
-      gpx: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/The%20Crashed%20Plane%20Hike.gpx"
+      gpx: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/The%20Crashed%20Plane%20Hike.gpx",
+      specs: {
+        duration: "2 - 3 hours",
+        length: "3.6 miles",
+        type: "Circular",
+        ascent: "145m",
+        difficulty: 3,
+        rating: 2,
+        crowd: "Very High"
+      }
     },
     {
       id: "kinder-scout",
@@ -98,7 +143,16 @@
       coords: [-1.8151209383535991, 53.364872107766416],
       hikeUrl: "https://thelostpeak.co.uk/hikes/kinder-scout",
       directionsUrl: "https://www.google.com/maps/dir/?api=1&destination=53.364872107766416,-1.8151209383535991",
-      gpx: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Kinder%20Scout%20Hike.gpx"
+      gpx: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Kinder%20Scout%20Hike.gpx",
+      specs: {
+        duration: "4 - 6 hours",
+        length: "8.3 miles",
+        type: "Circular",
+        ascent: "562m",
+        difficulty: 5,
+        rating: 5,
+        crowd: "Low"
+      }
     }
   ];
 
@@ -111,11 +165,10 @@
 
   map.addControl(new mapboxgl.NavigationControl(), "bottom-right");
 
-  const markersById = {};
   const markerElsById = {};
   const routeLayerId = {};
 
-  // unified hover batch for simultaneous marker + route highlight
+  // unified hover for simultaneous marker + route highlight
   let hoveredId = null;
   let rafToken = null;
 
@@ -143,7 +196,7 @@
       setRouteColor(hoveredId, BLUE);
       setMarkerColor(hoveredId, BLUE);
       map.getCanvas().style.cursor = "pointer";
-    }else{
+    } else {
       map.getCanvas().style.cursor = "";
     }
   }
@@ -151,6 +204,26 @@
   function setHovered(idOrNull){
     hoveredId = idOrNull;
     if(!rafToken) rafToken = requestAnimationFrame(applyHoverState);
+  }
+
+  function starsHTML(n){
+    const on = "★".repeat(n);
+    const off = "★".repeat(5-n);
+    return `<span class="stars">${[...on].map(()=>'<span class="star">★</span>').join('')}${[...off].map(()=>'<span class="star off">★</span>').join('')}</span>`;
+  }
+
+  function specsHTML(s){
+    return `
+      <div class="specs">
+        <div class="spec-row"><span class="spec-label">Duration:</span> <span class="spec-value">${s.duration}</span></div>
+        <div class="spec-row"><span class="spec-label">Length:</span> <span class="spec-value">${s.length}</span></div>
+        <div class="spec-row"><span class="spec-label">Type:</span> <span class="spec-value">${s.type}</span></div>
+        <div class="spec-row"><span class="spec-label">Total Ascent:</span> <span class="spec-value">${s.ascent}</span></div>
+        <div class="spec-row"><span class="spec-label">Difficulty:</span> ${starsHTML(s.difficulty)}</div>
+        <div class="spec-row"><span class="spec-label">Our Rating:</span> ${starsHTML(s.rating)}</div>
+        <div class="spec-row"><span class="spec-label">Crowd Levels:</span> <span class="spec-value">${s.crowd}</span></div>
+      </div>
+    `;
   }
 
   async function loadGpxAsLine(gpxUrl){
@@ -191,12 +264,15 @@
 
   map.on("load", async () => {
     // markers + popups
+    const bounds = new mapboxgl.LngLatBounds();
+
     hikes.forEach(h => {
       const popupHtml = `
         <div>
           <div class="popup-heading">${h.name}</div>
           <div><a class="popup-link" href="${h.hikeUrl}" target="_blank" rel="noopener">Hike Page</a></div>
           <div><a class="popup-link" href="${h.directionsUrl}" target="_blank" rel="noopener">Directions</a></div>
+          ${specsHTML(h.specs)}
         </div>
       `;
 
@@ -205,18 +281,25 @@
         .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupHtml))
         .addTo(map);
 
-      markersById[h.id] = marker;
+      bounds.extend(h.coords);
+
       const el = marker.getElement();
       el.style.cursor = "pointer";
       markerElsById[h.id] = el;
 
+      // hover highlighting
       el.addEventListener("mouseenter", () => setHovered(h.id));
       el.addEventListener("mouseleave", () => setHovered(null));
+
+      // mobile tap: centre without zoom
+      el.addEventListener("click", () => {
+        if (window.innerWidth < 700) {
+          map.easeTo({ center: h.coords, duration: 400 });
+        }
+      });
     });
 
-    const bounds = new mapboxgl.LngLatBounds();
-    hikes.forEach(h => bounds.extend(h.coords));
-
+    // routes
     await Promise.all(hikes.map(async h => {
       try{
         const line = await loadGpxAsLine(h.gpx);
@@ -225,15 +308,15 @@
 
         map.on("mouseenter", layerId, () => setHovered(h.id));
         map.on("mouseleave", layerId, () => setHovered(null));
+        // (no click-zoom behaviour)
       }catch(e){
         console.warn(e.message || e);
       }
     }));
 
-    /* Zoom out slightly more than before */
-    map.fitBounds(bounds, { padding: 80 }); // was 40
+    // zoomed out slightly more
+    map.fitBounds(bounds, { padding: 80 });
   });
 </script>
 </body>
 </html>
-
