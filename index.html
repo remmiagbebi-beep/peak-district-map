@@ -55,10 +55,12 @@
     }
 
     .popup-body{
-      padding:8px 57px 10px 12px;
-      text-align:center;
-      min-width:0; /* allow shrink wrap */
-    }
+  padding:8px 27px 10px 12px;
+  flex:0 0 220px;   /* was ~170 — now +50px wider */
+  text-align:center;
+  min-width:0;
+}
+
 
     .popup-heading{
       font-weight:800;
@@ -292,5 +294,6 @@ map.on("load", async () => {
 </script>
 </body>
 </html>
+
 
 
