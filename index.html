@@ -6,9 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
   <style>
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
+
     .marker{ cursor:pointer !important }
 
     .mapboxgl-popup{ filter:drop-shadow(0 14px 28px rgba(0,0,0,.45)) }
@@ -27,6 +29,7 @@
       display:inline-block;
       overflow:hidden;
     }
+
     .mapboxgl-popup-close-button{
       color:#222 !important;
       font-size:18px !important;
@@ -40,7 +43,10 @@
       box-shadow:none !important;
     }
 
-    .popup-card{ display:flex; align-items:stretch }
+    .popup-card{
+      display:flex;
+      align-items:stretch;
+    }
 
     .popup-img{
       width:140px;
@@ -54,13 +60,13 @@
       box-shadow:none !important;
     }
 
+    /* WHITE SECTION — increased +50px (from ~170 to 220) */
     .popup-body{
-  padding:8px 27px 10px 12px;
-  flex:0 0 220px;   /* was ~170 — now +50px wider */
-  text-align:center;
-  min-width:0;
-}
-
+      padding:8px 27px 10px 12px;
+      flex:0 0 220px; /* << widened by +50px */
+      text-align:center;
+      min-width:0;
+    }
 
     .popup-heading{
       font-weight:800;
@@ -78,14 +84,20 @@
       gap:4px;
       align-items:center;
     }
+
     .spec-row{
       display:flex;
       align-items:center;
       justify-content:center;
       gap:6px;
     }
+
     .icon{ width:16px; height:16px; flex:0 0 16px; color:#1E1E1E }
-    .spec-value{ font-weight:800; color:#EC2629 }
+
+    .spec-value{
+      font-weight:800;
+      color:#EC2629;
+    }
 
     .popup-actions{
       display:flex;
@@ -94,13 +106,14 @@
       align-items:center;
       margin-top:8px;
     }
+
     .popup-link{
       color:#3899EC;
       font-weight:600;
       text-decoration:none;
       white-space:nowrap;
-      -webkit-tap-highlight-color:transparent;
     }
+
     .mapboxgl-popup-content a,
     .mapboxgl-popup-content a:focus,
     .mapboxgl-popup-content a:active{
@@ -116,11 +129,13 @@
     }
   </style>
 </head>
+
 <body>
 <div id="map"></div>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
 <script src="https://unpkg.com/@tmcw/togeojson@5.8.0/dist/togeojson.umd.js"></script>
+
 <script>
 mapboxgl.accessToken="pk.eyJ1IjoicmVtbWlhZ2JlYmkiLCJhIjoiY21odHRrYTQzMTk0bjJqcjE1b2xhZ2FraSJ9.nTCz33gX0gQt3T4A6VD0oQ";
 
@@ -146,7 +161,7 @@ const hikes = [
   },
   {
     id:"crashed-plane",
-    name:"Crashed Plane Hike",  // removed "The"
+    name:"Crashed Plane Hike",
     coords:[-1.8689,53.4329],
     hikeUrl:"https://thelostpeak.co.uk/hikes/crashed-plane",
     directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.4329,-1.8689",
@@ -166,11 +181,12 @@ const hikes = [
   }
 ];
 
+/* MAP */
 const map = new mapboxgl.Map({
   container:"map",
   style:"mapbox://styles/mapbox/satellite-streets-v12",
   center:[-1.78,53.41],
-  zoom:9.2
+  zoom:10      /* <<< MORE ZOOMED IN */
 });
 map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
 
@@ -180,17 +196,19 @@ let hoveredId = null;
 let rafToken = null;
 
 function setMarkerColor(id,color){
-  const el = markerElsById[id];
+  const el=markerElsById[id];
   if(!el) return;
-  const path = el.querySelector("svg path");
+  const path=el.querySelector("svg path");
   if(path) path.setAttribute("fill",color);
 }
+
 function setRouteColor(id,color){
-  const lyr = routeLayerId[id];
+  const lyr=routeLayerId[id];
   if(lyr && map.getLayer(lyr)){
     map.setPaintProperty(lyr,"line-color",color);
   }
 }
+
 function applyHoverState(){
   rafToken=null;
   Object.keys(routeLayerId).forEach(id=>setRouteColor(id,RED));
@@ -203,6 +221,7 @@ function applyHoverState(){
     map.getCanvas().style.cursor="";
   }
 }
+
 function setHovered(id){
   hoveredId=id;
   if(!rafToken) rafToken=requestAnimationFrame(applyHoverState);
@@ -245,13 +264,16 @@ async function loadGpx(url){
   const gj=toGeoJSON.gpx(xml);
   return gj.features.find(f=>f.geometry && f.geometry.type==="LineString");
 }
+
 function addRoute(id,line){
   const src=`route-src-${id}`;
   const lyr=`route-lyr-${id}`;
   if(!map.getSource(src)) map.addSource(src,{type:"geojson",data:line});
   if(!map.getLayer(lyr)){
     map.addLayer({
-      id:lyr, type:"line", source:src,
+      id:lyr,
+      type:"line",
+      source:src,
       paint:{ "line-color":RED, "line-width":4, "line-opacity":0.95 }
     });
   }
@@ -262,14 +284,15 @@ map.on("load", async () => {
   const bounds=new mapboxgl.LngLatBounds();
 
   hikes.forEach(h=>{
-    const m=new mapboxgl.Marker({color:RED})
+    const marker=new mapboxgl.Marker({color:RED})
       .setLngLat(h.coords)
       .setPopup(new mapboxgl.Popup({offset:22}).setHTML(popupHtmlFor(h)))
       .addTo(map);
 
-    const el=m.getElement();
+    const el=marker.getElement();
     el.classList.add("marker");
     markerElsById[h.id]=el;
+
     bounds.extend(h.coords);
 
     el.addEventListener("mouseenter",()=>setHovered(h.id));
@@ -289,11 +312,8 @@ map.on("load", async () => {
     }catch(e){}
   }
 
-  map.fitBounds(bounds,{padding:110, maxZoom:9.4});
+  map.fitBounds(bounds,{padding:110, maxZoom:10});  /* <<< also zoom in more */
 });
 </script>
 </body>
 </html>
-
-
-
