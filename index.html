@@ -6,14 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
   <style>
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
 
     .marker { cursor:pointer !important; }
+
     .mapboxgl-popup { filter: drop-shadow(0 14px 28px rgba(0,0,0,0.45)); }
 
-    /* Popup card with LEFT photo, RIGHT content */
+    /* Popup card with side image */
     .mapboxgl-popup-content{
       background:#fff !important;
       color:#1E1E1E;
@@ -22,13 +24,15 @@
       box-shadow:0 10px 24px rgba(0,0,0,0.35) !important;
       font-family:"Inter", system-ui,-apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
       padding:0 !important;
-      max-width:440px;
+      max-width:360px;         /* tightened */
       width:max-content;
       position:relative;
-      overflow:hidden; /* keeps the rounded corners tight */
+      overflow:hidden;
     }
-    /* Hide the arrow so the left edge stays perfectly straight */
-    .mapboxgl-popup-tip{ display:none !important; }
+
+    .mapboxgl-popup-tip{
+      display:none !important;
+    }
 
     .mapboxgl-popup-close-button{
       color:#333 !important;
@@ -41,10 +45,9 @@
 
     .popup-card{
       display:flex;
-      align-items:stretch; /* photo matches text column height */
+      align-items:stretch;
     }
 
-    /* Use a DIV with background-image so it stretches to full card height */
     .popup-img{
       width:130px;
       flex:0 0 130px;
@@ -52,11 +55,19 @@
       border-radius:12px 0 0 12px;
       user-select:none;
       -webkit-user-drag:none;
+
+      /* Remove borders or faint lines completely */
+      background-size:cover;
+      background-position:center;
+      background-repeat:no-repeat;
+      border:none !important;
+      outline:none !important;
+      box-shadow:none !important;
     }
 
     .popup-body{
-      padding:10px 12px 12px 12px;
-      min-width:220px;
+      padding:8px 10px 10px 10px;   /* reduced padding */
+      min-width:200px;
     }
 
     .popup-heading{
@@ -71,68 +82,59 @@
       font-size:13px;
       display:flex;
       flex-direction:column;
-      align-items:flex-start;
       gap:4px;
     }
+
     .spec-row{
       display:flex;
       align-items:center;
       gap:6px;
       width:max-content;
     }
+
     .icon{
       width:16px;
       height:16px;
       flex:0 0 16px;
-      color:#1E1E1E;
     }
+
     .spec-value{
       font-weight:800;
       color:#EC2629;
-      text-transform:none;
     }
+
     .popup-actions{
       display:flex;
       gap:6px;
-      justify-content:flex-start;
-      align-items:center;
       margin-top:10px;
     }
+
     .popup-link{
       color:#3899EC;
       font-weight:600;
       text-decoration:none;
-      -webkit-tap-highlight-color:transparent;
-    }
-    .popup-link:focus,
-    .popup-link:focus-visible,
-    .popup-link:active,
-    .mapboxgl-popup-content a:focus,
-    .mapboxgl-popup-content a:focus-visible,
-    .mapboxgl-popup-content a:active{
-      outline:none !important;
-      box-shadow:none !important;
-      border:none !important;
     }
 
-    @media (max-width:440px){
+    @media (max-width:420px){
       .popup-img{ width:110px; flex-basis:110px; }
-      .popup-body{ min-width:200px; }
+      .popup-body{ min-width:180px; }
     }
   </style>
 </head>
+
 <body>
 <div id="map"></div>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
 <script src="https://unpkg.com/@tmcw/togeojson@5.8.0/dist/togeojson.umd.js"></script>
+
 <script>
 mapboxgl.accessToken="pk.eyJ1IjoicmVtbWlhZ2JlYmkiLCJhIjoiY21odHRrYTQzMTk0bjJqcjE1b2xhZ2FraSJ9.nTCz33gX0gQt3T4A6VD0oQ";
 
 const RED  = "#EC2629";
 const BLUE = "#3899EC";
 
-/* Raw GitHub image URLs */
+/* Raw GitHub images */
 const IMG = {
   derwent: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/derwent-dam-tower.jpg",
   crashed: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/b29-overexposed-crash-site.jpg",
@@ -143,7 +145,7 @@ const hikes = [
   {
     id:"derwent-edge",
     name:"Derwent Edge",
-    coords:[-1.7427849606990842,53.400582126300236],
+    coords:[-1.74278,53.40058],
     hikeUrl:"https://thelostpeak.co.uk/hikes/derwent-edge",
     directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.400582126300236,-1.7427849606990842",
     gpx:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Derwent%20Edge.gpx",
@@ -163,7 +165,7 @@ const hikes = [
   {
     id:"kinder-scout",
     name:"Kinder Scout",
-    coords:[-1.8151209383535991,53.364872107766416],
+    coords:[-1.81512,53.36487],
     hikeUrl:"https://thelostpeak.co.uk/hikes/kinder-scout",
     directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.364872107766416,-1.8151209383535991",
     gpx:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Kinder%20Scout%20Hike.gpx",
@@ -171,6 +173,9 @@ const hikes = [
     specs:{ duration:"4 to 6 hours", length:"8.3 miles", ascent:"562m" }
   }
 ];
+
+
+/* --- MAP SETUP --- */
 
 const map = new mapboxgl.Map({
   container:"map",
@@ -181,23 +186,26 @@ const map = new mapboxgl.Map({
 map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
 
 const markerElsById = {};
-const routeLayerId = {};
+const routeLayerId  = {};
+
 let hoveredId = null;
 let rafToken = null;
 
+/* Hover sync functions */
 function setMarkerColor(id,color){
   const el = markerElsById[id];
   if(!el) return;
-  // Default Mapbox marker uses an inline SVG
   const path = el.querySelector("svg path");
   if(path) path.setAttribute("fill",color);
 }
+
 function setRouteColor(id,color){
   const lyr = routeLayerId[id];
   if(lyr && map.getLayer(lyr)){
     map.setPaintProperty(lyr,"line-color",color);
   }
 }
+
 function applyHoverState(){
   rafToken=null;
   Object.keys(routeLayerId).forEach(id=>setRouteColor(id,RED));
@@ -210,31 +218,22 @@ function applyHoverState(){
     map.getCanvas().style.cursor="";
   }
 }
+
 function setHovered(id){
   hoveredId=id;
   if(!rafToken) rafToken=requestAnimationFrame(applyHoverState);
 }
 
+
+/* Icons */
 const icons={
   clock:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
   length:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
   ascent:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M6 18l5-6 4 4 5-7"/><path d="M20 7h-5v5"/></svg>`
 };
 
-function specsHTML(s,urls){
-  return `
-    <div class="specs">
-      <div class="spec-row">${icons.clock}<span class="spec-value">${s.duration}</span></div>
-      <div class="spec-row">${icons.length}<span class="spec-value">${s.length}</span></div>
-      <div class="spec-row">${icons.ascent}<span class="spec-value">${s.ascent}</span></div>
-      <div class="popup-actions">
-        <a class="popup-link" tabindex="-1" href="${urls.hikeUrl}" target="_blank" rel="noopener">Hike Page</a>
-        <span style="font-weight:800;">&amp;</span>
-        <a class="popup-link" tabindex="-1" href="${urls.directionsUrl}" target="_blank" rel="noopener">Directions</a>
-      </div>
-    </div>`;
-}
 
+/* Popup HTML builders */
 function wrapTitle(name){
   const w=name.trim().split(/\s+/);
   const lines=[];
@@ -242,11 +241,24 @@ function wrapTitle(name){
   return lines.join("<br>");
 }
 
+function specsHTML(s,u){
+  return `
+  <div class="specs">
+    <div class="spec-row">${icons.clock}<span class="spec-value">${s.duration}</span></div>
+    <div class="spec-row">${icons.length}<span class="spec-value">${s.length}</span></div>
+    <div class="spec-row">${icons.ascent}<span class="spec-value">${s.ascent}</span></div>
+    <div class="popup-actions">
+      <a class="popup-link" href="${u.hikeUrl}" target="_blank">Hike Page</a>
+      <span style="font-weight:800;">&amp;</span>
+      <a class="popup-link" href="${u.directionsUrl}" target="_blank">Directions</a>
+    </div>
+  </div>`;
+}
+
 function popupHtmlFor(h){
-  const safeUrl = h.photo; // already raw GitHub
   return `
     <div class="popup-card">
-      <div class="popup-img" style="background-image:url('${safeUrl}')"></div>
+      <div class="popup-img" style="background-image:url('${h.photo}')"></div>
       <div class="popup-body">
         <div class="popup-heading">${wrapTitle(h.name)}</div>
         ${specsHTML(h.specs,{hikeUrl:h.hikeUrl,directionsUrl:h.directionsUrl})}
@@ -254,17 +266,21 @@ function popupHtmlFor(h){
     </div>`;
 }
 
-async function loadGpx(gpxUrl){
-  const res=await fetch(gpxUrl);
+
+/* GPX loader and route builder */
+async function loadGpx(url){
+  const res=await fetch(url);
   const xml=new DOMParser().parseFromString(await res.text(),"text/xml");
   const gj=toGeoJSON.gpx(xml);
   return gj.features.find(f=>f.geometry && f.geometry.type==="LineString");
 }
+
 function addRoute(id,line){
   const src=`route-src-${id}`;
   const lyr=`route-lyr-${id}`;
-  if(!map.getSource(src))
+  if(!map.getSource(src)){
     map.addSource(src,{type:"geojson",data:line});
+  }
   if(!map.getLayer(lyr)){
     map.addLayer({
       id:lyr,
@@ -273,40 +289,37 @@ function addRoute(id,line){
       paint:{
         "line-color":RED,
         "line-width":4,
-        "line-opacity":0.95,
-        "line-color-transition":{duration:0,delay:0},
-        "line-width-transition":{duration:0,delay:0}
+        "line-opacity":0.95
       }
     });
   }
   routeLayerId[id]=lyr;
 }
 
+
+/* On map load */
 map.on("load", async () => {
+
   const bounds=new mapboxgl.LngLatBounds();
 
+  /* Markers */
   hikes.forEach(h=>{
-    const marker=new mapboxgl.Marker({color:RED})
+    const m=new mapboxgl.Marker({color:RED})
       .setLngLat(h.coords)
-      .setPopup(new mapboxgl.Popup({
-        offset:25,            // small gap since we hid the tip
-        closeButton:true,
-        className:"card-popup"
-      }).setHTML(popupHtmlFor(h)))
+      .setPopup(new mapboxgl.Popup({offset:25}).setHTML(popupHtmlFor(h)))
       .addTo(map);
 
-    const el=marker.getElement();
+    const el=m.getElement();
     el.classList.add("marker");
-    bounds.extend(h.coords);
     markerElsById[h.id]=el;
+
+    bounds.extend(h.coords);
 
     el.addEventListener("mouseenter",()=>setHovered(h.id));
     el.addEventListener("mouseleave",()=>setHovered(null));
-    el.addEventListener("click",()=>{
-      if(window.innerWidth<700) map.easeTo({center:h.coords,duration:400});
-    });
   });
 
+  /* Routes */
   for(const h of hikes){
     try{
       const line=await loadGpx(h.gpx);
@@ -320,5 +333,6 @@ map.on("load", async () => {
   map.fitBounds(bounds,{padding:120});
 });
 </script>
+
 </body>
 </html>
