@@ -13,109 +13,115 @@
     .marker { cursor:pointer !important; }
     .mapboxgl-popup { filter: drop-shadow(0 14px 28px rgba(0,0,0,0.45)); }
 
-    .mapboxgl-popup-content {
+    /* Popup as a side-by-side CARD (photo on the LEFT, content on the RIGHT) */
+    .mapboxgl-popup-content{
       background:#fff !important;
       color:#1E1E1E;
       border-radius:12px !important;
       border:none !important;
       box-shadow:0 10px 24px rgba(0,0,0,0.35) !important;
       font-family:"Inter", system-ui,-apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
-      padding:12px 12px !important;
-      max-width:340px;
+      padding:0 !important;                 /* no outer padding so the image can sit flush on the left */
+      max-width:420px;
       width:max-content;
       position:relative;
+      overflow:hidden;                      /* keep rounded corners clean around the image */
     }
-    .mapboxgl-popup-tip {
+    .mapboxgl-popup-tip{
       border-top-color:#fff !important;
       border-bottom-color:#fff !important;
       margin-top:-2px;
     }
-    /* Close button (bigger + offset) */
-    .mapboxgl-popup-close-button {
+    .mapboxgl-popup-close-button{
       color:#333 !important;
       font-size:22px !important;
       top:6px !important;
       right:8px !important;
       padding:2px 4px !important;
+      z-index:2;
     }
 
-    /* --- Photo + title row --- */
+    /* Card layout */
     .popup-card{
       display:flex;
-      gap:10px;
-      align-items:flex-start;
-      margin-bottom:6px;
+      align-items:stretch;                  /* image height matches the whole card */
     }
     .popup-img{
-      width:96px;
-      height:76px;
-      border-radius:10px;
+      width:120px;                          /* photo column width */
+      height:100%;
       object-fit:cover;
       display:block;
-      flex:0 0 96px;
       user-select:none;
       -webkit-user-drag:none;
       background:#eee;
+      border-radius:12px 0 0 12px;          /* rounded only on the left to match container */
+      flex:0 0 120px;
     }
-    .popup-heading {
+    .popup-body{
+      padding:10px 12px 12px 12px;          /* inner padding for text */
+      min-width:210px;
+    }
+
+    .popup-heading{
       font-weight:700;
       font-size:14px;
       line-height:1.3;
-      margin:0 0 2px 0;
+      margin:0 0 6px 0;
       color:#1E1E1E;
-      text-align:left;
       text-transform:none;
     }
 
-    /* centre block, keep rows left-justified */
-    .specs {
-      margin-top:6px;
+    .specs{
       font-size:13px;
       display:flex;
       flex-direction:column;
-      align-items:center;
+      align-items:flex-start;               /* left-aligned rows */
+      gap:4px;
     }
-    .spec-row {
+    .spec-row{
       display:flex;
       align-items:center;
       gap:6px;
-      margin:2px 0;
       width:max-content;
     }
-    .icon {
+    .icon{
       width:16px;
       height:16px;
       flex:0 0 16px;
       color:#1E1E1E;
     }
-    .spec-value {
+    .spec-value{
       font-weight:800;
       color:#EC2629;
       text-transform:none;
     }
-    .popup-actions {
+
+    .popup-actions{
       display:flex;
       gap:6px;
-      justify-content:center;
+      justify-content:flex-start;
       align-items:center;
       margin-top:10px;
     }
-    .popup-link {
+    .popup-link{
       color:#3899EC;
       font-weight:600;
       text-decoration:none;
-      -webkit-tap-highlight-color: transparent;
+      -webkit-tap-highlight-color:transparent;
     }
-    /* remove focus rings in popups */
     .popup-link:focus,
     .popup-link:focus-visible,
     .popup-link:active,
     .mapboxgl-popup-content a:focus,
     .mapboxgl-popup-content a:focus-visible,
-    .mapboxgl-popup-content a:active {
+    .mapboxgl-popup-content a:active{
       outline:none !important;
       box-shadow:none !important;
       border:none !important;
+    }
+
+    @media (max-width:420px){
+      .popup-img{ width:100px; flex-basis:100px; }
     }
   </style>
 </head>
@@ -125,13 +131,12 @@
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
 <script src="https://unpkg.com/@tmcw/togeojson@5.8.0/dist/togeojson.umd.js"></script>
 <script>
-mapboxgl.accessToken =
-"pk.eyJ1IjoicmVtbWlhZ2JlYmkiLCJhIjoiY21odHRrYTQzMTk0bjJqcjE1b2xhZ2FraSJ9.nTCz33gX0gQt3T4A6VD0oQ";
+mapboxgl.accessToken="pk.eyJ1IjoicmVtbWlhZ2JlYmkiLCJhIjoiY21odHRrYTQzMTk0bjJqcjE1b2xhZ2FraSJ9.nTCz33gX0gQt3T4A6VD0oQ";
 
 const RED  = "#EC2629";
 const BLUE = "#3899EC";
 
-/* Use RAW GitHub URLs for images */
+/* Raw GitHub image URLs */
 const IMG = {
   derwent: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/derwent-dam-tower.jpg",
   crashed: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/b29-overexposed-crash-site.jpg",
@@ -177,7 +182,6 @@ const map = new mapboxgl.Map({
   center:[-1.78,53.41],
   zoom:9.4
 });
-
 map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
 
 const markerElsById = {};
@@ -243,14 +247,12 @@ function wrapTitle(name){
 
 function popupHtmlFor(h){
   return `
-    <div>
-      <div class="popup-card">
-        <img class="popup-img" src="${h.photo}" alt="${h.name}" />
-        <div class="popup-titlecol">
-          <div class="popup-heading">${wrapTitle(h.name)}</div>
-        </div>
+    <div class="popup-card">
+      <img class="popup-img" src="${h.photo}" alt="${h.name}">
+      <div class="popup-body">
+        <div class="popup-heading">${wrapTitle(h.name)}</div>
+        ${specsHTML(h.specs,{hikeUrl:h.hikeUrl,directionsUrl:h.directionsUrl})}
       </div>
-      ${specsHTML(h.specs,{hikeUrl:h.hikeUrl,directionsUrl:h.directionsUrl})}
     </div>`;
 }
 
@@ -291,18 +293,15 @@ map.on("load", async () => {
       .setPopup(new mapboxgl.Popup({offset:25}).setHTML(popupHtmlFor(h)))
       .addTo(map);
 
-    const el = marker.getElement();
+    const el=marker.getElement();
     el.classList.add("marker");
-
     bounds.extend(h.coords);
     markerElsById[h.id]=el;
 
     el.addEventListener("mouseenter",()=>setHovered(h.id));
     el.addEventListener("mouseleave",()=>setHovered(null));
-
     el.addEventListener("click",()=>{
-      if(window.innerWidth<700)
-        map.easeTo({center:h.coords,duration:400});
+      if(window.innerWidth<700) map.easeTo({center:h.coords,duration:400});
     });
   });
 
@@ -313,7 +312,7 @@ map.on("load", async () => {
       line.geometry.coordinates.forEach(c=>bounds.extend(c));
       map.on("mouseenter",routeLayerId[h.id],()=>setHovered(h.id));
       map.on("mouseleave",routeLayerId[h.id],()=>setHovered(null));
-    } catch(e){}
+    }catch(e){}
   }
 
   map.fitBounds(bounds,{padding:120});
