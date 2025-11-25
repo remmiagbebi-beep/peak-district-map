@@ -12,23 +12,19 @@
     #map { position:absolute; inset:0 }
 
     .marker{ cursor:pointer !important }
-
     .mapboxgl-popup{ filter:drop-shadow(0 14px 28px rgba(0,0,0,.45)) }
     .mapboxgl-popup-tip{ display:none !important }
 
-    /* Ensure the container clips the corners perfectly */
+    /* Make popup background transparent; move white card styling inside */
     .mapboxgl-popup-content{
-      background:#fff !important;
-      color:#1E1E1E;
-      border-radius:12px !important;
+      background:transparent !important;
       border:none !important;
-      box-shadow:0 10px 24px rgba(0,0,0,.35) !important;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif !important;
       padding:0 !important;
+      box-shadow:none !important;
       width:auto;
       max-width:none;
-      display:inline-block;
-      overflow:hidden !important; /* critical for clean rounded corners */
+      overflow:visible !important;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif !important;
     }
 
     .mapboxgl-popup-close-button{
@@ -42,26 +38,34 @@
       border:none !important;
       outline:none !important;
       box-shadow:none !important;
+      z-index:3;
+      position:absolute;
     }
 
-    .popup-card{ display:flex; align-items:stretch }
+    /* Real card (handles rounding & clipping) */
+    .popup-card{
+      display:flex;
+      align-items:stretch;
+      background:#fff;
+      border-radius:12px;
+      overflow:hidden;                 /* critical: clips corners, no white fringe */
+    }
 
-    /* Let parent do all rounding: remove image radius to kill white fringe */
+    /* Left image column – no radius, let parent clip */
     .popup-img{
       width:140px;
       flex:0 0 140px;
       background:center/cover no-repeat;
       background-color:transparent;
-      border-radius:0 !important;           /* <- key change */
-      user-select:none;
-      -webkit-user-drag:none;
-      border:none !important;
-      outline:none !important;
+      display:block;
+      margin:0;
+      border:0 !important;
+      outline:0 !important;
       box-shadow:none !important;
-      margin:0; display:block; transform:translateZ(0); /* avoid subpixel seams */
+      transform:translateZ(0);         /* prevent subpixel seams */
     }
 
-    /* WHITE SECTION — widened +50px */
+    /* Right (white) column widened +50px */
     .popup-body{
       padding:8px 27px 10px 12px;
       flex:0 0 220px;
@@ -188,6 +192,7 @@ const routeLayerId = {};
 let hoveredId = null;
 let rafToken = null;
 
+/* hover sync */
 function setMarkerColor(id,color){
   const el=markerElsById[id];
   if(!el) return;
@@ -217,6 +222,7 @@ function setHovered(id){
   if(!rafToken) rafToken=requestAnimationFrame(applyHoverState);
 }
 
+/* icons */
 const icons={
   clock:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
   length:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
