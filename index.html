@@ -22,8 +22,8 @@
       border:none !important;
       box-shadow:0 10px 24px rgba(0,0,0,0.35) !important;
       font-family:"Inter", system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif !important;
-      padding:12px 14px !important;
-      max-width:260px;
+      padding:12px 12px !important;
+      max-width:340px;             /* wider to fit the photo + text */
       width:max-content;
       position:relative;
     }
@@ -43,17 +43,33 @@
       padding:2px 4px !important;
     }
 
+    /* --- Photo + title row --- */
+    .popup-card{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      margin-bottom:6px;
+    }
+    .popup-img{
+      width:96px;
+      height:76px;
+      border-radius:10px;          /* soft edges like your reference */
+      object-fit:cover;
+      flex:0 0 96px;
+      user-select:none;
+      -webkit-user-drag:none;
+    }
     .popup-heading {
       font-weight:700;
       font-size:14px;
-      line-height:1.35;
-      margin-bottom:6px;
+      line-height:1.3;
+      margin:0 0 2px 0;
       color:#1E1E1E;
-      text-align:center;
+      text-align:left;             /* title sits to the right of photo */
       text-transform:none;
     }
 
-    /* centre the block, keep rows left-justified */
+    /* centre the block as a whole, keep rows left-justified */
     .specs {
       margin-top:6px;
       font-size:13px;
@@ -132,6 +148,7 @@ const hikes = [
     hikeUrl:"https://thelostpeak.co.uk/hikes/derwent-edge",
     directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.400582126300236,-1.7427849606990842",
     gpx:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Derwent%20Edge.gpx",
+    photo:"/mnt/data/derwent-dam-tower.jpg",
     specs:{ duration:"3 to 4 hours", length:"7.4 miles", ascent:"367m" }
   },
   {
@@ -141,6 +158,7 @@ const hikes = [
     hikeUrl:"https://thelostpeak.co.uk/hikes/crashed-plane",
     directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.4329,-1.8689",
     gpx:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/The%20Crashed%20Plane%20Hike.gpx",
+    photo:"/mnt/data/b29-overexposed-crash-site.jpg",
     specs:{ duration:"2 to 3 hours", length:"3.6 miles", ascent:"145m" }
   },
   {
@@ -150,6 +168,7 @@ const hikes = [
     hikeUrl:"https://thelostpeak.co.uk/hikes/kinder-scout",
     directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.364872107766416,-1.8151209383535991",
     gpx:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Kinder%20Scout%20Hike.gpx",
+    photo:"/mnt/data/kinder-scout-carved-rock.png",
     specs:{ duration:"4 to 6 hours", length:"8.3 miles", ascent:"562m" }
   }
 ];
@@ -233,7 +252,12 @@ function wrapTitle(name){
 function popupHtmlFor(h){
   return `
     <div>
-      <div class="popup-heading">${wrapTitle(h.name)}</div>
+      <div class="popup-card">
+        <img class="popup-img" src="${h.photo}" alt="${h.name}" />
+        <div class="popup-titlecol">
+          <div class="popup-heading">${wrapTitle(h.name)}</div>
+        </div>
+      </div>
       ${specsHTML(h.specs,{hikeUrl:h.hikeUrl,directionsUrl:h.directionsUrl})}
     </div>`;
 }
