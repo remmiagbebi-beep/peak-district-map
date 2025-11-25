@@ -6,75 +6,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-
   <style>
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
+    .marker{ cursor:pointer !important }
 
-    .marker{ cursor:pointer !important; }
-    .mapboxgl-popup{ filter:drop-shadow(0 14px 28px rgba(0,0,0,0.45)); }
+    .mapboxgl-popup{ filter:drop-shadow(0 14px 28px rgba(0,0,0,.45)) }
+    .mapboxgl-popup-tip{ display:none !important }
 
-    /* Popup container */
     .mapboxgl-popup-content{
       background:#fff !important;
       color:#1E1E1E;
       border-radius:12px !important;
       border:none !important;
-      box-shadow:0 10px 24px rgba(0,0,0,0.35) !important;
-      font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif !important;
+      box-shadow:0 10px 24px rgba(0,0,0,.35) !important;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif !important;
       padding:0 !important;
-      max-width:none;             /* no forced width */
-      width:auto;                 /* shrink to fit content */
+      width:auto;
+      max-width:none;
+      display:inline-block;
       overflow:hidden;
-      display:inline-block;       /* shrink-wrap */
     }
-    .mapboxgl-popup-tip{ display:none !important; }
-
     .mapboxgl-popup-close-button{
-      color:#333 !important;
-      font-size:20px !important;
+      color:#222 !important;
+      font-size:18px !important;
       top:6px !important;
       right:6px !important;
       padding:0 !important;
       line-height:1;
-      z-index:2;
       background:transparent !important;
       border:none !important;
-      box-shadow:none !important;
       outline:none !important;
+      box-shadow:none !important;
     }
 
-    /* Card layout */
-    .popup-card{
-      display:flex;
-      align-items:stretch;
-    }
+    .popup-card{ display:flex; align-items:stretch }
+
     .popup-img{
-      width:132px;
-      flex:0 0 132px;
+      width:140px;
+      flex:0 0 140px;
       background:#eee center/cover no-repeat;
       border-radius:12px 0 0 12px;
       user-select:none;
       -webkit-user-drag:none;
       border:none !important;
       outline:none !important;
-      box-shadow:none !important;  /* no black edge */
+      box-shadow:none !important;
     }
+
     .popup-body{
-      width:172px;                /* fixed body width to kill right whitespace */
-      min-width:0;
-      padding:8px 28px 10px 10px; /* extra right pad so title does not sit under the X */
-      text-align:center;          /* centre all text */
+      padding:8px 12px 10px 12px;
+      text-align:center;
+      min-width:0; /* allow shrink wrap */
     }
 
     .popup-heading{
-      font-weight:700;
+      font-weight:800;
       font-size:14px;
       line-height:1.25;
       margin:0 0 6px 0;
       color:#1E1E1E;
-      white-space:normal;
-      word-break:keep-all;
+      white-space:nowrap;
     }
 
     .specs{
@@ -87,14 +79,11 @@
     .spec-row{
       display:flex;
       align-items:center;
-      gap:6px;
       justify-content:center;
-      width:100%;
+      gap:6px;
     }
-    .icon{
-      width:16px; height:16px; flex:0 0 16px; color:#1E1E1E;
-    }
-    .spec-value{ font-weight:800; color:#EC2629; }
+    .icon{ width:16px; height:16px; flex:0 0 16px; color:#1E1E1E }
+    .spec-value{ font-weight:800; color:#EC2629 }
 
     .popup-actions{
       display:flex;
@@ -107,6 +96,7 @@
       color:#3899EC;
       font-weight:600;
       text-decoration:none;
+      white-space:nowrap;
       -webkit-tap-highlight-color:transparent;
     }
     .mapboxgl-popup-content a,
@@ -114,13 +104,13 @@
     .mapboxgl-popup-content a:active{
       outline:none !important;
       box-shadow:none !important;
-      border:none !important;     /* no black line on link */
+      border:none !important;
       background:transparent !important;
     }
 
     @media (max-width:440px){
-      .popup-img{ width:120px; flex-basis:120px; }
-      .popup-body{ width:160px; }
+      .popup-img{ width:120px; flex-basis:120px }
+      .popup-heading{ white-space:normal }
     }
   </style>
 </head>
@@ -135,7 +125,6 @@ mapboxgl.accessToken="pk.eyJ1IjoicmVtbWlhZ2JlYmkiLCJhIjoiY21odHRrYTQzMTk0bjJqcjE
 const RED  = "#EC2629";
 const BLUE = "#3899EC";
 
-/* Raw GitHub images */
 const IMG = {
   derwent: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/derwent-dam-tower.jpg",
   crashed: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/b29-overexposed-crash-site.jpg",
@@ -155,7 +144,7 @@ const hikes = [
   },
   {
     id:"crashed-plane",
-    name:"Crashed Plane Hike",   // removed "The"
+    name:"Crashed Plane Hike",  // removed "The"
     coords:[-1.8689,53.4329],
     hikeUrl:"https://thelostpeak.co.uk/hikes/crashed-plane",
     directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.4329,-1.8689",
@@ -179,7 +168,7 @@ const map = new mapboxgl.Map({
   container:"map",
   style:"mapbox://styles/mapbox/satellite-streets-v12",
   center:[-1.78,53.41],
-  zoom:8.6            /* zoomed out further by default */
+  zoom:9.2
 });
 map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
 
@@ -188,7 +177,6 @@ const routeLayerId = {};
 let hoveredId = null;
 let rafToken = null;
 
-/* hover sync */
 function setMarkerColor(id,color){
   const el = markerElsById[id];
   if(!el) return;
@@ -218,23 +206,22 @@ function setHovered(id){
   if(!rafToken) rafToken=requestAnimationFrame(applyHoverState);
 }
 
-/* icons */
 const icons={
   clock:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
   length:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
   ascent:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M6 18l5-6 4 4 5-7"/><path d="M20 7h-5v5"/></svg>`
 };
 
-function specsHTML(s,urls){
+function specsHTML(s,u){
   return `
     <div class="specs">
       <div class="spec-row">${icons.clock}<span class="spec-value">${s.duration}</span></div>
       <div class="spec-row">${icons.length}<span class="spec-value">${s.length}</span></div>
       <div class="spec-row">${icons.ascent}<span class="spec-value">${s.ascent}</span></div>
       <div class="popup-actions">
-        <a class="popup-link" href="${urls.hikeUrl}" target="_blank" rel="noopener">Hike Page</a>
+        <a class="popup-link" href="${u.hikeUrl}" target="_blank" rel="noopener">Hike Page</a>
         <span style="font-weight:800;">&amp;</span>
-        <a class="popup-link" href="${urls.directionsUrl}" target="_blank" rel="noopener">Directions</a>
+        <a class="popup-link" href="${u.directionsUrl}" target="_blank" rel="noopener">Directions</a>
       </div>
     </div>`;
 }
@@ -250,9 +237,8 @@ function popupHtmlFor(h){
     </div>`;
 }
 
-/* GPX */
-async function loadGpx(gpxUrl){
-  const res=await fetch(gpxUrl);
+async function loadGpx(url){
+  const res=await fetch(url);
   const xml=new DOMParser().parseFromString(await res.text(),"text/xml");
   const gj=toGeoJSON.gpx(xml);
   return gj.features.find(f=>f.geometry && f.geometry.type==="LineString");
@@ -260,37 +246,28 @@ async function loadGpx(gpxUrl){
 function addRoute(id,line){
   const src=`route-src-${id}`;
   const lyr=`route-lyr-${id}`;
-  if(!map.getSource(src))
-    map.addSource(src,{type:"geojson",data:line});
+  if(!map.getSource(src)) map.addSource(src,{type:"geojson",data:line});
   if(!map.getLayer(lyr)){
     map.addLayer({
-      id:lyr,
-      type:"line",
-      source:src,
-      paint:{
-        "line-color":RED,
-        "line-width":4,
-        "line-opacity":0.95
-      }
+      id:lyr, type:"line", source:src,
+      paint:{ "line-color":RED, "line-width":4, "line-opacity":0.95 }
     });
   }
   routeLayerId[id]=lyr;
 }
 
-/* init */
 map.on("load", async () => {
   const bounds=new mapboxgl.LngLatBounds();
 
   hikes.forEach(h=>{
-    const marker=new mapboxgl.Marker({color:RED})
+    const m=new mapboxgl.Marker({color:RED})
       .setLngLat(h.coords)
       .setPopup(new mapboxgl.Popup({offset:22}).setHTML(popupHtmlFor(h)))
       .addTo(map);
 
-    const el=marker.getElement();
+    const el=m.getElement();
     el.classList.add("marker");
     markerElsById[h.id]=el;
-
     bounds.extend(h.coords);
 
     el.addEventListener("mouseenter",()=>setHovered(h.id));
@@ -310,8 +287,7 @@ map.on("load", async () => {
     }catch(e){}
   }
 
-  /* Fit all but cap how far in it can zoom. Lower maxZoom = more zoomed out. */
-  map.fitBounds(bounds,{padding:100, maxZoom:8.6});
+  map.fitBounds(bounds,{padding:110, maxZoom:9.4});
 });
 </script>
 </body>
