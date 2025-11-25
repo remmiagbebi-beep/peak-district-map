@@ -11,43 +11,47 @@
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
 
-    .marker { cursor:pointer !important; }
-    .mapboxgl-popup { filter: drop-shadow(0 14px 28px rgba(0,0,0,0.45)); }
+    .marker{ cursor:pointer !important; }
+    .mapboxgl-popup{ filter:drop-shadow(0 14px 28px rgba(0,0,0,0.45)); }
 
-    /* Popup card with side image (tight, centered text) */
+    /* Popup container */
     .mapboxgl-popup-content{
       background:#fff !important;
       color:#1E1E1E;
       border-radius:12px !important;
       border:none !important;
       box-shadow:0 10px 24px rgba(0,0,0,0.35) !important;
-      font-family:"Inter", system-ui,-apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
+      font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif !important;
       padding:0 !important;
-      width:auto;                  /* let content define width */
-      max-width:none;              /* remove artificial extra space */
-      position:relative;
+      max-width:none;             /* no forced width */
+      width:auto;                 /* shrink to fit content */
       overflow:hidden;
-      display:inline-block;        /* shrink-wrap to content */
+      display:inline-block;       /* shrink-wrap */
     }
     .mapboxgl-popup-tip{ display:none !important; }
 
     .mapboxgl-popup-close-button{
       color:#333 !important;
-      font-size:22px !important;
+      font-size:20px !important;
       top:6px !important;
-      right:8px !important;
-      padding:2px 4px !important;
+      right:6px !important;
+      padding:0 !important;
+      line-height:1;
       z-index:2;
+      background:transparent !important;
+      border:none !important;
+      box-shadow:none !important;
+      outline:none !important;
     }
 
+    /* Card layout */
     .popup-card{
       display:flex;
       align-items:stretch;
     }
-
     .popup-img{
-      width:140px;                 /* a touch wider image */
-      flex:0 0 140px;
+      width:132px;
+      flex:0 0 132px;
       background:#eee center/cover no-repeat;
       border-radius:12px 0 0 12px;
       user-select:none;
@@ -56,11 +60,11 @@
       outline:none !important;
       box-shadow:none !important;  /* no black edge */
     }
-
     .popup-body{
-      padding:6px 8px 8px 8px;     /* tighter = less right whitespace */
-      min-width:170px;             /* small, avoids wrapping too early */
-      text-align:center;           /* center all text */
+      width:172px;                /* fixed body width to kill right whitespace */
+      min-width:0;
+      padding:8px 28px 10px 10px; /* extra right pad so title does not sit under the X */
+      text-align:center;          /* centre all text */
     }
 
     .popup-heading{
@@ -69,6 +73,8 @@
       line-height:1.25;
       margin:0 0 6px 0;
       color:#1E1E1E;
+      white-space:normal;
+      word-break:keep-all;
     }
 
     .specs{
@@ -76,30 +82,24 @@
       display:flex;
       flex-direction:column;
       gap:4px;
-      align-items:center;          /* center rows */
+      align-items:center;
     }
     .spec-row{
       display:flex;
       align-items:center;
       gap:6px;
-      justify-content:center;      /* center icon + value */
+      justify-content:center;
       width:100%;
     }
     .icon{
-      width:16px;
-      height:16px;
-      flex:0 0 16px;
-      color:#1E1E1E;
+      width:16px; height:16px; flex:0 0 16px; color:#1E1E1E;
     }
-    .spec-value{
-      font-weight:800;
-      color:#EC2629;
-    }
+    .spec-value{ font-weight:800; color:#EC2629; }
 
     .popup-actions{
       display:flex;
       gap:6px;
-      justify-content:center;      /* center links */
+      justify-content:center;
       align-items:center;
       margin-top:8px;
     }
@@ -109,30 +109,26 @@
       text-decoration:none;
       -webkit-tap-highlight-color:transparent;
     }
-    /* kill any focus rings/borders on links inside popup */
     .mapboxgl-popup-content a,
     .mapboxgl-popup-content a:focus,
-    .mapboxgl-popup-content a:focus-visible,
     .mapboxgl-popup-content a:active{
       outline:none !important;
       box-shadow:none !important;
-      border:none !important;
+      border:none !important;     /* no black line on link */
       background:transparent !important;
     }
 
-    @media (max-width:420px){
+    @media (max-width:440px){
       .popup-img{ width:120px; flex-basis:120px; }
-      .popup-body{ min-width:160px; }
+      .popup-body{ width:160px; }
     }
   </style>
 </head>
-
 <body>
 <div id="map"></div>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
 <script src="https://unpkg.com/@tmcw/togeojson@5.8.0/dist/togeojson.umd.js"></script>
-
 <script>
 mapboxgl.accessToken="pk.eyJ1IjoicmVtbWlhZ2JlYmkiLCJhIjoiY21odHRrYTQzMTk0bjJqcjE1b2xhZ2FraSJ9.nTCz33gX0gQt3T4A6VD0oQ";
 
@@ -179,21 +175,20 @@ const hikes = [
   }
 ];
 
-/* Map */
 const map = new mapboxgl.Map({
   container:"map",
   style:"mapbox://styles/mapbox/satellite-streets-v12",
   center:[-1.78,53.41],
-  zoom:9.4
+  zoom:8.6            /* zoomed out further by default */
 });
 map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
 
-/* Hover sync */
 const markerElsById = {};
-const routeLayerId  = {};
+const routeLayerId = {};
 let hoveredId = null;
 let rafToken = null;
 
+/* hover sync */
 function setMarkerColor(id,color){
   const el = markerElsById[id];
   if(!el) return;
@@ -223,27 +218,27 @@ function setHovered(id){
   if(!rafToken) rafToken=requestAnimationFrame(applyHoverState);
 }
 
-/* Icons */
+/* icons */
 const icons={
   clock:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
   length:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
   ascent:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M6 18l5-6 4 4 5-7"/><path d="M20 7h-5v5"/></svg>`
 };
 
-/* Popup builders */
-function specsHTML(s,u){
+function specsHTML(s,urls){
   return `
     <div class="specs">
       <div class="spec-row">${icons.clock}<span class="spec-value">${s.duration}</span></div>
       <div class="spec-row">${icons.length}<span class="spec-value">${s.length}</span></div>
       <div class="spec-row">${icons.ascent}<span class="spec-value">${s.ascent}</span></div>
       <div class="popup-actions">
-        <a class="popup-link" href="${u.hikeUrl}" target="_blank" rel="noopener">Hike Page</a>
+        <a class="popup-link" href="${urls.hikeUrl}" target="_blank" rel="noopener">Hike Page</a>
         <span style="font-weight:800;">&amp;</span>
-        <a class="popup-link" href="${u.directionsUrl}" target="_blank" rel="noopener">Directions</a>
+        <a class="popup-link" href="${urls.directionsUrl}" target="_blank" rel="noopener">Directions</a>
       </div>
     </div>`;
 }
+
 function popupHtmlFor(h){
   return `
     <div class="popup-card">
@@ -255,9 +250,9 @@ function popupHtmlFor(h){
     </div>`;
 }
 
-/* GPX load + route */
-async function loadGpx(url){
-  const res=await fetch(url);
+/* GPX */
+async function loadGpx(gpxUrl){
+  const res=await fetch(gpxUrl);
   const xml=new DOMParser().parseFromString(await res.text(),"text/xml");
   const gj=toGeoJSON.gpx(xml);
   return gj.features.find(f=>f.geometry && f.geometry.type==="LineString");
@@ -265,21 +260,24 @@ async function loadGpx(url){
 function addRoute(id,line){
   const src=`route-src-${id}`;
   const lyr=`route-lyr-${id}`;
-  if(!map.getSource(src)){
+  if(!map.getSource(src))
     map.addSource(src,{type:"geojson",data:line});
-  }
   if(!map.getLayer(lyr)){
     map.addLayer({
       id:lyr,
       type:"line",
       source:src,
-      paint:{ "line-color":RED, "line-width":4, "line-opacity":0.95 }
+      paint:{
+        "line-color":RED,
+        "line-width":4,
+        "line-opacity":0.95
+      }
     });
   }
   routeLayerId[id]=lyr;
 }
 
-/* Init */
+/* init */
 map.on("load", async () => {
   const bounds=new mapboxgl.LngLatBounds();
 
@@ -292,6 +290,7 @@ map.on("load", async () => {
     const el=marker.getElement();
     el.classList.add("marker");
     markerElsById[h.id]=el;
+
     bounds.extend(h.coords);
 
     el.addEventListener("mouseenter",()=>setHovered(h.id));
@@ -311,9 +310,9 @@ map.on("load", async () => {
     }catch(e){}
   }
 
-  map.fitBounds(bounds,{padding:120});
+  /* Fit all but cap how far in it can zoom. Lower maxZoom = more zoomed out. */
+  map.fitBounds(bounds,{padding:100, maxZoom:8.6});
 });
 </script>
-
 </body>
 </html>
