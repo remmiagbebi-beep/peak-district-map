@@ -23,7 +23,7 @@
       width:auto;
       max-width:none;
       overflow:visible !important;
-      display:inline-block;              /* <- shrink-wrap so text isn't cut */
+      display:inline-block;              /* shrink-wrap to content */
       box-sizing:border-box;
       font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif !important;
     }
@@ -48,7 +48,7 @@
       align-items:stretch;
       background:#fff;
       border-radius:12px;
-      overflow:hidden;
+      overflow:hidden;                   /* keep rounded corners */
     }
 
     .img-wrap{
@@ -66,12 +66,13 @@
       transform:translateZ(0);
     }
 
+    /* Allow the white column to grow so text never clips */
     .popup-body{
       padding:8px 27px 10px 12px;
-      flex:0 0 220px;   /* widened +50px */
+      flex:1 1 240px;                    /* was fixed 220px; now flexible */
       text-align:center;
       min-width:0;
-      word-break:break-word;             /* safety for long words */
+      word-break:break-word;
     }
 
     .popup-heading{
@@ -80,7 +81,7 @@
       line-height:1.25;
       margin:0 0 6px 0;
       color:#1E1E1E;
-      white-space:normal;                /* <- allow wrapping so it stays in view */
+      white-space:normal;                /* allow wrapping */
     }
 
     .specs{
@@ -105,7 +106,7 @@
       justify-content:center;
       align-items:center;
       margin-top:8px;
-      flex-wrap:wrap;                    /* allow wrap on tiny screens */
+      flex-wrap:wrap;                    /* wrap if needed on narrow screens */
     }
     .popup-link{
       color:#3899EC;
