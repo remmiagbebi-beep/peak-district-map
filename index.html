@@ -16,6 +16,7 @@
     .mapboxgl-popup{ filter:drop-shadow(0 14px 28px rgba(0,0,0,.45)) }
     .mapboxgl-popup-tip{ display:none !important }
 
+    /* Ensure the container clips the corners perfectly */
     .mapboxgl-popup-content{
       background:#fff !important;
       color:#1E1E1E;
@@ -27,7 +28,7 @@
       width:auto;
       max-width:none;
       display:inline-block;
-      overflow:hidden;
+      overflow:hidden !important; /* critical for clean rounded corners */
     }
 
     .mapboxgl-popup-close-button{
@@ -43,24 +44,24 @@
       box-shadow:none !important;
     }
 
-    .popup-card{
-      display:flex;
-      align-items:stretch;
-    }
+    .popup-card{ display:flex; align-items:stretch }
 
+    /* Let parent do all rounding: remove image radius to kill white fringe */
     .popup-img{
       width:140px;
       flex:0 0 140px;
-      background:#eee center/cover no-repeat;
-      border-radius:12px 0 0 12px;
+      background:center/cover no-repeat;
+      background-color:transparent;
+      border-radius:0 !important;           /* <- key change */
       user-select:none;
       -webkit-user-drag:none;
       border:none !important;
       outline:none !important;
       box-shadow:none !important;
+      margin:0; display:block; transform:translateZ(0); /* avoid subpixel seams */
     }
 
-    /* white section widened +50px */
+    /* WHITE SECTION — widened +50px */
     .popup-body{
       padding:8px 27px 10px 12px;
       flex:0 0 220px;
@@ -84,20 +85,14 @@
       gap:4px;
       align-items:center;
     }
-
     .spec-row{
       display:flex;
       align-items:center;
       justify-content:center;
       gap:6px;
     }
-
     .icon{ width:16px; height:16px; flex:0 0 16px; color:#1E1E1E }
-
-    .spec-value{
-      font-weight:800;
-      color:#EC2629;
-    }
+    .spec-value{ font-weight:800; color:#EC2629 }
 
     .popup-actions{
       display:flex;
@@ -106,14 +101,12 @@
       align-items:center;
       margin-top:8px;
     }
-
     .popup-link{
       color:#3899EC;
       font-weight:600;
       text-decoration:none;
       white-space:nowrap;
     }
-
     .mapboxgl-popup-content a,
     .mapboxgl-popup-content a:focus,
     .mapboxgl-popup-content a:active{
@@ -142,7 +135,6 @@ mapboxgl.accessToken="pk.eyJ1IjoicmVtbWlhZ2JlYmkiLCJhIjoiY21odHRrYTQzMTk0bjJqcjE
 const RED  = "#EC2629";
 const BLUE = "#3899EC";
 
-/* images */
 const IMG = {
   derwent: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/derwent-dam-tower.jpg",
   crashed: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/b29-overexposed-crash-site.jpg",
@@ -196,7 +188,6 @@ const routeLayerId = {};
 let hoveredId = null;
 let rafToken = null;
 
-/* hover sync */
 function setMarkerColor(id,color){
   const el=markerElsById[id];
   if(!el) return;
@@ -226,7 +217,6 @@ function setHovered(id){
   if(!rafToken) rafToken=requestAnimationFrame(applyHoverState);
 }
 
-/* icons */
 const icons={
   clock:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
   length:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
