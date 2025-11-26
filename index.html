@@ -14,10 +14,7 @@
     .marker{ cursor:pointer !important }
 
     /* 15% smaller markers */
-    .marker svg{
-      transform:scale(0.85);
-      transform-origin:center;
-    }
+    .marker svg{ transform:scale(0.85); transform-origin:center }
 
     .mapboxgl-popup{ filter:drop-shadow(0 14px 28px rgba(0,0,0,.45)) }
     .mapboxgl-popup-tip{ display:none !important }
@@ -36,17 +33,16 @@
     }
 
     .popup-card{
-  display:flex;
-  align-items:stretch;
-  background:#fff;
-  border-radius:12px;
-  overflow:hidden;
-  width:fit-content;   /* shrink to content */
-  min-width:auto;      /* allow natural width */
-  max-width:none;      /* no forced max */
-  height:130px;
-}
-
+      display:flex;
+      align-items:stretch;
+      background:#fff;
+      border-radius:12px;
+      overflow:hidden;
+      width:fit-content;   /* shrink to content */
+      min-width:auto;
+      max-width:none;
+      height:130px;
+    }
 
     .img-wrap{
       width:140px;
@@ -65,10 +61,11 @@
     }
 
     .popup-body{
+      box-sizing:border-box;          /* include padding inside the 140px */
       padding:8px 12px 10px 10px;
-      flex:0 0 110px;     /* UPDATED */
-      min-width:110px;    /* UPDATED */
-      max-width:110px;    /* UPDATED */
+      flex:0 0 140px;                 /* match image width */
+      min-width:140px;
+      max-width:140px;
       text-align:center;
       word-break:break-word;
       overflow:visible;
@@ -94,6 +91,7 @@
       gap:2px;
       align-items:center;
     }
+
     .spec-row{
       display:flex;
       align-items:center;
@@ -115,10 +113,10 @@
 
     .popup-link{
       color:#3899EC;
-      font-weight:800;   /* MATCH STATS */
+      font-weight:800;
       text-decoration:none;
       white-space:nowrap;
-      font-size:11px;    /* MATCH STATS */
+      font-size:11px;
       outline:none !important;
       box-shadow:none !important;
       border:none !important;
@@ -132,12 +130,8 @@
     }
 
     @media (max-width:440px){
-      .img-wrap{ width:120px; flex-basis:120px }
-      .popup-card{
-        min-width:290px;
-        max-width:320px;
-        height:190px;
-      }
+      .popup-card{ height:190px }
+      /* image stays 140px on mobile to keep symmetry with text panel */
     }
   </style>
 </head>
@@ -155,9 +149,9 @@ const RED  = "#EC2629";
 const BLUE = "#3899EC";
 
 const IMG = {
-  derwent: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/derwent-dam-tower.jpg",
-  crashed: "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/b29-overexposed-crash-site.jpg",
-  kinder:  "https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/kinder-scout-carved-rock.png"
+  derwent:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/derwent-dam-tower.jpg",
+  crashed:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/b29-overexposed-crash-site.jpg",
+  kinder:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/images/kinder-scout-carved-rock.png"
 };
 
 const hikes = [
@@ -193,7 +187,6 @@ const hikes = [
   }
 ];
 
-/* Map */
 const map = new mapboxgl.Map({
   container:"map",
   style:"mapbox://styles/mapbox/satellite-streets-v12",
@@ -202,7 +195,6 @@ const map = new mapboxgl.Map({
 });
 map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
 
-/* Hover sync */
 const markerElsById = {};
 const routeLayerId  = {};
 let hoveredId = null;
@@ -224,7 +216,6 @@ function setRouteColor(id,color){
 function applyHoverState(){
   Object.keys(routeLayerId).forEach(id=>setRouteColor(id,RED));
   Object.keys(markerElsById).forEach(id=>setMarkerColor(id,RED));
-
   if(hoveredId){
     setRouteColor(hoveredId,BLUE);
     setMarkerColor(hoveredId,BLUE);
@@ -239,14 +230,12 @@ function setHovered(id){
   applyHoverState();
 }
 
-/* Icons */
 const icons={
   clock:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
   length:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
   ascent:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M6 18l5-6 4 4 5-7"/><path d="M20 7h-5v5"/></svg>`
 };
 
-/* Popup HTML */
 function specsHTML(s,u){
   return `
     <div class="specs">
@@ -271,7 +260,6 @@ function popupHtmlFor(h){
     </div>`;
 }
 
-/* Load GPX */
 async function loadGpx(url){
   const res=await fetch(url);
   const xml=new DOMParser().parseFromString(await res.text(),"text/xml");
@@ -282,11 +270,7 @@ async function loadGpx(url){
 function addRoute(id,line){
   const src=`route-src-${id}`;
   const lyr=`route-lyr-${id}`;
-
-  if(!map.getSource(src)){
-    map.addSource(src,{type:"geojson",data:line});
-  }
-
+  if(!map.getSource(src)) map.addSource(src,{type:"geojson",data:line});
   if(!map.getLayer(lyr)){
     map.addLayer({
       id:lyr,
@@ -301,11 +285,9 @@ function addRoute(id,line){
       }
     });
   }
-
   routeLayerId[id]=lyr;
 }
 
-/* Init */
 map.on("load", async () => {
   const bounds=new mapboxgl.LngLatBounds();
 
@@ -318,7 +300,6 @@ map.on("load", async () => {
     const el=marker.getElement();
     el.classList.add("marker");
     markerElsById[h.id]=el;
-
     bounds.extend(h.coords);
 
     el.addEventListener("mouseenter",()=>setHovered(h.id));
@@ -332,12 +313,9 @@ map.on("load", async () => {
     try{
       const line=await loadGpx(h.gpx);
       addRoute(h.id,line);
-
       line.geometry.coordinates.forEach(c=>bounds.extend(c));
-
       map.on("mouseenter",routeLayerId[h.id],()=>setHovered(h.id));
       map.on("mouseleave",routeLayerId[h.id],()=>setHovered(null));
-
     }catch(e){}
   }
 
@@ -346,4 +324,3 @@ map.on("load", async () => {
 </script>
 </body>
 </html>
-
