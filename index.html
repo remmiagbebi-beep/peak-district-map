@@ -13,6 +13,12 @@
 
     .marker{ cursor:pointer !important }
 
+    /* 15% smaller markers */
+    .marker svg{
+      transform:scale(0.85);
+      transform-origin:center;
+    }
+
     .mapboxgl-popup{ filter:drop-shadow(0 14px 28px rgba(0,0,0,.45)) }
     .mapboxgl-popup-tip{ display:none !important }
 
@@ -72,8 +78,6 @@
       transform:translateZ(0);
     }
 
-    .popup-body *{ line-height:1.15 }
-
     .popup-body{
       padding:8px 22px 10px 12px;
       flex:0 0 170px;
@@ -85,11 +89,13 @@
       display:flex;
       flex-direction:column;
       justify-content:center;
+      line-height:1.2;
     }
 
     .popup-heading{
       font-weight:800;
       font-size:12px;
+      line-height:1.15;
       margin:0 0 4px 0;
       color:#1E1E1E;
       white-space:normal;
@@ -102,7 +108,6 @@
       gap:2px;
       align-items:center;
     }
-
     .spec-row{
       display:flex;
       align-items:center;
@@ -110,41 +115,35 @@
       gap:4px;
     }
 
-    .icon{
-      width:16px;
-      height:16px;
-      flex:0 0 16px;
-      color:#1E1E1E;
-    }
-
-    .spec-value{
-      font-weight:800;
-      color:#EC2629;
-      font-size:12px;
-    }
+    .icon{ width:16px; height:16px; flex:0 0 16px; color:#1E1E1E }
+    .spec-value{ font-weight:800; color:#EC2629; font-size:12px }
 
     .popup-actions{
       display:flex;
       flex-direction:column;
-      gap:4px;
+      gap:6px;
       justify-content:center;
       align-items:center;
       margin-top:6px;
-      flex-wrap:nowrap;
     }
 
+    /* remove all link outlines / boxes */
     .popup-link{
       color:#3899EC;
       font-weight:600;
       text-decoration:none;
       white-space:nowrap;
       font-size:12px;
-    }
-
-    /* Remove black focus box from popup links only */
-    .popup-link:focus{
       outline:none !important;
       box-shadow:none !important;
+      border:none !important;
+    }
+
+    .popup-link:focus,
+    .popup-link:active{
+      outline:none !important;
+      box-shadow:none !important;
+      border:none !important;
     }
 
     @media (max-width:440px){
@@ -227,14 +226,12 @@ function setMarkerColor(id,color){
   const path = el.querySelector("svg path");
   if(path) path.setAttribute("fill",color);
 }
-
 function setRouteColor(id,color){
   const lyr = routeLayerId[id];
   if(lyr && map.getLayer(lyr)){
     map.setPaintProperty(lyr,"line-color",color);
   }
 }
-
 function applyHoverState(){
   Object.keys(routeLayerId).forEach(id=>setRouteColor(id,RED));
   Object.keys(markerElsById).forEach(id=>setMarkerColor(id,RED));
@@ -246,7 +243,6 @@ function applyHoverState(){
     map.getCanvas().style.cursor="";
   }
 }
-
 function setHovered(id){
   hoveredId=id;
   applyHoverState();
@@ -291,7 +287,6 @@ async function loadGpx(url){
   const gj=toGeoJSON.gpx(xml);
   return gj.features.find(f=>f.geometry && f.geometry.type==="LineString");
 }
-
 function addRoute(id,line){
   const src=`route-src-${id}`;
   const lyr=`route-lyr-${id}`;
