@@ -50,11 +50,9 @@
       border-radius:12px;
       overflow:hidden;
       width:fit-content;
-      min-width:310px;                 /* 140 img + 170 text */
+      min-width:310px;
       max-width:360px;
-
-      /* ADDED: lock the overall height */
-      height:140px;
+      height:190px;
     }
 
     .img-wrap{
@@ -63,8 +61,6 @@
       border-radius:12px 0 0 12px;
       overflow:hidden;
       background:#000;
-
-      /* ADDED: match parent height */
       height:100%;
     }
     .img-wrap img{
@@ -77,17 +73,12 @@
 
     .popup-body{
       padding:8px 22px 10px 12px;
-
-      /* widened a touch so text wraps less, helping the fixed height fit */
       flex:0 0 170px;
       min-width:170px;
       max-width:170px;
-
       text-align:center;
       word-break:break-word;
       overflow:visible;
-
-      /* ADDED: vertically center content inside the fixed height */
       display:flex;
       flex-direction:column;
       justify-content:center;
@@ -95,7 +86,7 @@
 
     .popup-heading{
       font-weight:800;
-      font-size:14px;
+      font-size:12px;   /* reduced */
       line-height:1.25;
       margin:0 0 6px 0;
       color:#1E1E1E;
@@ -103,20 +94,32 @@
     }
 
     .specs{
-      font-size:13px;
+      font-size:11px;   /* reduced */
       display:flex;
       flex-direction:column;
       gap:4px;
       align-items:center;
     }
+
     .spec-row{
       display:flex;
       align-items:center;
       justify-content:center;
       gap:6px;
     }
-    .icon{ width:16px; height:16px; flex:0 0 16px; color:#1E1E1E }
-    .spec-value{ font-weight:800; color:#EC2629 }
+
+    .icon{
+      width:14px;       /* reduced */
+      height:14px;      /* reduced */
+      flex:0 0 14px;
+      color:#1E1E1E;
+    }
+
+    .spec-value{
+      font-weight:800;
+      font-size:12px;   /* reduced */
+      color:#EC2629;
+    }
 
     .popup-actions{
       display:flex;
@@ -126,9 +129,11 @@
       margin-top:8px;
       flex-wrap:wrap;
     }
+
     .popup-link{
       color:#3899EC;
       font-weight:600;
+      font-size:12px;   /* reduced */
       text-decoration:none;
       white-space:nowrap;
     }
@@ -136,9 +141,9 @@
     @media (max-width:440px){
       .img-wrap{ width:120px; flex-basis:120px }
       .popup-card{
-        min-width:290px;               /* 120 + 170 */
+        min-width:290px;
         max-width:320px;
-        height:190px;                  /* keep same fixed height on mobile */
+        height:190px;
       }
     }
   </style>
@@ -332,4 +337,3 @@ map.on("load", async () => {
 </script>
 </body>
 </html>
-
