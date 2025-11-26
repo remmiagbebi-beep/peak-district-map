@@ -12,6 +12,7 @@
     #map { position:absolute; inset:0 }
 
     .marker{ cursor:pointer !important }
+
     .mapboxgl-popup{ filter:drop-shadow(0 14px 28px rgba(0,0,0,.45)) }
     .mapboxgl-popup-tip{ display:none !important }
 
@@ -50,7 +51,7 @@
       border-radius:12px;
       overflow:hidden;
       width:fit-content;
-      min-width:310px;                 /* 140 img + 170 text */
+      min-width:310px;
       max-width:360px;
       height:130px;
     }
@@ -71,6 +72,11 @@
       transform:translateZ(0);
     }
 
+    /* tighter line height applied everywhere inside the body */
+    .popup-body *{
+      line-height:1.15;
+    }
+
     .popup-body{
       padding:8px 22px 10px 12px;
       flex:0 0 170px;
@@ -87,8 +93,7 @@
     .popup-heading{
       font-weight:800;
       font-size:12px;
-      line-height:1.25;
-      margin:0 0 6px 0;
+      margin:0 0 4px 0;     /* was 6px */
       color:#1E1E1E;
       white-space:normal;
     }
@@ -97,27 +102,40 @@
       font-size:11px;
       display:flex;
       flex-direction:column;
-      gap:4px;
+      gap:2px;              /* was 4px */
       align-items:center;
     }
+
     .spec-row{
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:6px;
+      gap:4px;              /* was 6px */
     }
-    .icon{ width:16px; height:16px; flex:0 0 16px; color:#1E1E1E }
-    .spec-value{ font-weight:800; color:#EC2629; font-size:12px; }
+
+    .icon{
+      width:16px;
+      height:16px;
+      flex:0 0 16px;
+      color:#1E1E1E;
+    }
+
+    .spec-value{
+      font-weight:800;
+      color:#EC2629;
+      font-size:12px;
+    }
 
     .popup-actions{
       display:flex;
-      flex-direction:column;           /* stack links vertically */
-      gap:6px;
+      flex-direction:column;
+      gap:4px;              /* was 6px */
       justify-content:center;
       align-items:center;
-      margin-top:8px;
+      margin-top:6px;       /* was 8px */
       flex-wrap:nowrap;
     }
+
     .popup-link{
       color:#3899EC;
       font-weight:600;
@@ -195,7 +213,7 @@ const map = new mapboxgl.Map({
 });
 map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
 
-/* Hover sync — instant */
+/* Hover sync */
 const markerElsById = {};
 const routeLayerId  = {};
 let hoveredId = null;
@@ -235,7 +253,7 @@ const icons={
   ascent:`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M6 18l5-6 4 4 5-7"/><path d="M20 7h-5v5"/></svg>`
 };
 
-/* Popup builders */
+/* Popup builder */
 function specsHTML(s,u){
   return `
     <div class="specs">
