@@ -10,8 +10,10 @@
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
 
-    /* Hide Mapbox logo and attribution */
-    .mapboxgl-ctrl-logo, .mapboxgl-ctrl-attrib, .mapboxgl-ctrl-attrib-inner { display:none !important; visibility:hidden !important; }
+    /* Hide Mapbox logo and attribution (you'll do attribution elsewhere) */
+    .mapboxgl-ctrl-logo,
+    .mapboxgl-ctrl-attrib,
+    .mapboxgl-ctrl-attrib-inner { display:none !important; visibility:hidden !important; }
 
     .marker{ cursor:pointer !important }
     .marker svg{ transform:scale(0.85); transform-origin:center }
@@ -62,6 +64,12 @@
 
     .hike-gap{ margin-top:2px }
 
+    /* Slightly smaller fullscreen icon (only affects the fullscreen button) */
+    .mapboxgl-ctrl-fullscreen .mapboxgl-ctrl-icon {
+      transform: scale(0.88);
+      transform-origin: center;
+    }
+
     @media (max-width:440px){
       .img-wrap{ width:120px; flex-basis:120px }
       .popup-card{ min-width:290px; max-width:320px; height:190px }
@@ -109,43 +117,44 @@ const map=new mapboxgl.Map({
   attributionControl:false
 });
 
-/* Navigation control plus fullscreen control */
+/* Add controls */
 const nav = new mapboxgl.NavigationControl({ showCompass:true, showZoom:true });
 map.addControl(nav, "bottom-right");
-const fs = new mapboxgl.FullscreenControl();
+const fs  = new mapboxgl.FullscreenControl();
 map.addControl(fs, "bottom-right");
 
-/* Move the fullscreen button into the same control group
-   and place it between zoom-out and compass for a seamless look */
-function mergeFullscreenIntoNav(){
-  const root = map.getContainer();
-  const corner = root.querySelector('.mapboxgl-ctrl-bottom-right');
-  if(!corner) return;
+/* Merge the fullscreen button into the same group (after zoom-out, before compass) */
+function mergeFullscreenIntoNavOnce(){
+  const corner = map.getContainer().querySelector('.mapboxgl-ctrl-bottom-right');
+  if(!corner) return false;
 
-  const groups = corner.querySelectorAll('.mapboxgl-ctrl-group');
-  if(groups.length < 2) return;
+  // The nav group is the one containing zoom-in
+  const navGroup = Array.from(corner.querySelectorAll('.mapboxgl-ctrl-group'))
+    .find(g => g.querySelector('.mapboxgl-ctrl-zoom-in'));
+  const fsBtn = corner.querySelector('button.mapboxgl-ctrl-fullscreen');
+  if(!navGroup || !fsBtn) return false;
 
-  const navGroup = groups[0];           // zoom in, zoom out, compass
-  const fsGroup  = groups[1];           // fullscreen on its own group
-  const fsBtn = fsGroup.querySelector('button.mapboxgl-ctrl-fullscreen');
-  const zoomOutBtn = navGroup.querySelector('.mapboxgl-ctrl-zoom-out');
+  const fsGroup = fsBtn.closest('.mapboxgl-ctrl-group');
+  const zoomOut = navGroup.querySelector('.mapboxgl-ctrl-zoom-out');
+  const compass = navGroup.querySelector('.mapboxgl-ctrl-compass');
 
-  if(fsBtn && zoomOutBtn){
-    navGroup.insertBefore(fsBtn, zoomOutBtn.nextSibling); // insert after zoom-out
-    fsGroup.remove(); // remove the now-empty group
+  if(zoomOut){
+    navGroup.insertBefore(fsBtn, compass ? compass : zoomOut.nextSibling);
+  } else {
+    navGroup.appendChild(fsBtn);
   }
-}
 
-/* Ensure branding stays removed if re-inserted */
-function nukeBranding(){
-  document.querySelectorAll('.mapboxgl-ctrl-logo,.mapboxgl-ctrl-attrib,.mapboxgl-ctrl-attrib-inner').forEach(el=>el.remove());
+  if(fsGroup && fsGroup !== navGroup && fsGroup.childElementCount === 0) fsGroup.remove();
+  return true;
 }
 
 map.on('load', () => {
-  mergeFullscreenIntoNav();
-  nukeBranding();
-  new MutationObserver(() => { mergeFullscreenIntoNav(); nukeBranding(); })
-    .observe(map.getContainer(), {childList:true, subtree:true});
+  // Try a few times until the controls are in the DOM, then stop
+  let tries = 0;
+  (function tryMerge(){
+    if (mergeFullscreenIntoNavOnce() || (++tries > 20)) return;
+    requestAnimationFrame(tryMerge);
+  })();
 });
 
 /* Hover system */
