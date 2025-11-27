@@ -10,10 +10,8 @@
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
 
-    /* Hide Mapbox logo + attribution (you'll show attribution elsewhere) */
-    .mapboxgl-ctrl-logo,
-    .mapboxgl-ctrl-attrib,
-    .mapboxgl-ctrl-attrib-inner { display:none !important; visibility:hidden !important; }
+    /* Hide Mapbox logo and attribution */
+    .mapboxgl-ctrl-logo, .mapboxgl-ctrl-attrib, .mapboxgl-ctrl-attrib-inner { display:none !important; visibility:hidden !important; }
 
     .marker{ cursor:pointer !important }
     .marker svg{ transform:scale(0.85); transform-origin:center }
@@ -64,12 +62,6 @@
 
     .hike-gap{ margin-top:2px }
 
-    /* Slightly smaller fullscreen icon */
-    .mapboxgl-ctrl-fullscreen .mapboxgl-ctrl-icon {
-      transform: scale(0.88);
-      transform-origin: center;
-    }
-
     @media (max-width:440px){
       .img-wrap{ width:120px; flex-basis:120px }
       .popup-card{ min-width:290px; max-width:320px; height:190px }
@@ -82,7 +74,7 @@
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
 <script src="https://unpkg.com/@tmcw/togeojson@5.8.0/dist/togeojson.umd.js"></script>
 <script>
-mapboxgl.accessToken = "pk.eyJ1IjoicmVtbWlhZ2JlYmkiLCJhIjoiY21odHRrYTQzMTk0bjJqcjE1b2xhZ2FraSJ9.nTCz33gX0gQt3T4A6VD0oQ";
+mapboxgl.accessToken="pk.eyJ1IjoicmVtbWlhZ2JlYmkiLCJhIjoiY21odHRrYTQzMTk0bjJqcjE1b2xhZ2FraSJ9.nTCz33gX0gQt3T4A6VD0oQ";
 
 const RED="#EC2629", BLUE="#3899EC";
 const IMG={
@@ -92,12 +84,24 @@ const IMG={
 };
 
 const hikes=[
-  { id:"derwent-edge", name:"Derwent Edge", coords:[-1.7427849606990842,53.400582126300236], hikeUrl:"https://thelostpeak.co.uk/hikes/derwent-edge", directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.400582126300236,-1.7427849606990842", gpx:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Derwent%20Edge.gpx", photo:IMG.derwent, specs:{ duration:"3 to 4 hours", length:"7.4 miles", ascent:"367m" } },
-  { id:"crashed-plane", name:"Crashed Plane Hike", coords:[-1.8689,53.4329], hikeUrl:"https://thelostpeak.co.uk/hikes/crashed-plane", directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.4329,-1.8689", gpx:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/The%20Crashed%20Plane%20Hike.gpx", photo:IMG.crashed, specs:{ duration:"2 to 3 hours", length:"3.6 miles", ascent:"145m" } },
-  { id:"kinder-scout", name:"Kinder Scout", coords:[-1.8151209383535991,53.364872107766416], hikeUrl:"https://thelostpeak.co.uk/hikes/kinder-scout", directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.364872107766416,-1.8151209383535991", gpx:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Kinder%20Scout%20Hike.gpx", photo:IMG.kinder, specs:{ duration:"4 to 6 hours", length:"8.3 miles", ascent:"562m" } }
+  { id:"derwent-edge", name:"Derwent Edge", coords:[-1.7427849606990842,53.400582126300236],
+    hikeUrl:"https://thelostpeak.co.uk/hikes/derwent-edge",
+    directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.400582126300236,-1.7427849606990842",
+    gpx:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Derwent%20Edge.gpx",
+    photo:IMG.derwent, specs:{ duration:"3 to 4 hours", length:"7.4 miles", ascent:"367m" } },
+  { id:"crashed-plane", name:"Crashed Plane Hike", coords:[-1.8689,53.4329],
+    hikeUrl:"https://thelostpeak.co.uk/hikes/crashed-plane",
+    directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.4329,-1.8689",
+    gpx:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/The%20Crashed%20Plane%20Hike.gpx",
+    photo:IMG.crashed, specs:{ duration:"2 to 3 hours", length:"3.6 miles", ascent:"145m" } },
+  { id:"kinder-scout", name:"Kinder Scout", coords:[-1.8151209383535991,53.364872107766416],
+    hikeUrl:"https://thelostpeak.co.uk/hikes/kinder-scout",
+    directionsUrl:"https://www.google.com/maps/dir/?api=1&destination=53.364872107766416,-1.8151209383535991",
+    gpx:"https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/refs/heads/main/gpx/Kinder%20Scout%20Hike.gpx",
+    photo:IMG.kinder, specs:{ duration:"4 to 6 hours", length:"8.3 miles", ascent:"562m" } }
 ];
 
-const map = new mapboxgl.Map({
+const map=new mapboxgl.Map({
   container:"map",
   style:"mapbox://styles/mapbox/satellite-streets-v12",
   center:[-1.78,53.41],
@@ -105,37 +109,34 @@ const map = new mapboxgl.Map({
   attributionControl:false
 });
 
-/* Add controls */
+/* Navigation control plus fullscreen control */
 const nav = new mapboxgl.NavigationControl({ showCompass:true, showZoom:true });
 map.addControl(nav, "bottom-right");
-const fs  = new mapboxgl.FullscreenControl();
+const fs = new mapboxgl.FullscreenControl();
 map.addControl(fs, "bottom-right");
 
-/* Merge the fullscreen button into the same control group (between zoom-out and compass) */
+/* Move the fullscreen button into the same control group
+   and place it between zoom-out and compass for a seamless look */
 function mergeFullscreenIntoNav(){
-  const corner = map.getContainer().querySelector('.mapboxgl-ctrl-bottom-right');
+  const root = map.getContainer();
+  const corner = root.querySelector('.mapboxgl-ctrl-bottom-right');
   if(!corner) return;
 
-  const navGroup = Array.from(corner.querySelectorAll('.mapboxgl-ctrl-group'))
-    .find(g => g.querySelector('.mapboxgl-ctrl-zoom-in'));
-  const fsBtn   = corner.querySelector('button.mapboxgl-ctrl-fullscreen');
-  if(!navGroup || !fsBtn) return;
+  const groups = corner.querySelectorAll('.mapboxgl-ctrl-group');
+  if(groups.length < 2) return;
 
-  const fsGroup = fsBtn.closest('.mapboxgl-ctrl-group');
-  const compass = navGroup.querySelector('.mapboxgl-ctrl-compass');
-  const zoomOut = navGroup.querySelector('.mapboxgl-ctrl-zoom-out');
+  const navGroup = groups[0];           // zoom in, zoom out, compass
+  const fsGroup  = groups[1];           // fullscreen on its own group
+  const fsBtn = fsGroup.querySelector('button.mapboxgl-ctrl-fullscreen');
+  const zoomOutBtn = navGroup.querySelector('.mapboxgl-ctrl-zoom-out');
 
-  // Insert fullscreen after zoom-out; if no compass, it still sits nicely
-  if(zoomOut){
-    navGroup.insertBefore(fsBtn, compass ? compass : zoomOut.nextSibling);
-  } else {
-    navGroup.appendChild(fsBtn);
+  if(fsBtn && zoomOutBtn){
+    navGroup.insertBefore(fsBtn, zoomOutBtn.nextSibling); // insert after zoom-out
+    fsGroup.remove(); // remove the now-empty group
   }
-
-  if(fsGroup && fsGroup !== navGroup && fsGroup.childElementCount === 0) fsGroup.remove();
 }
 
-/* Keep Mapbox branding removed even if re-inserted */
+/* Ensure branding stays removed if re-inserted */
 function nukeBranding(){
   document.querySelectorAll('.mapboxgl-ctrl-logo,.mapboxgl-ctrl-attrib,.mapboxgl-ctrl-attrib-inner').forEach(el=>el.remove());
 }
