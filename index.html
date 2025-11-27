@@ -97,9 +97,8 @@
     .icon-red{ color:#EC2629 }
     .icon-blue{ color:#3899EC }
 
-    /* 25% smaller walking man + marker */
     .icon-img{
-      width:12px;      /* ↓ 25% smaller */
+      width:12px;
       height:12px;
       display:block;
       filter: invert(41%) sepia(97%) saturate(1476%) hue-rotate(191deg) brightness(96%) contrast(101%);
@@ -107,7 +106,6 @@
 
     .spec-value{ font-weight:800; color:#EC2629; font-size:11px }
 
-    /* remove black outline around Hike Page link */
     .popup-link{
       color:#3899EC;
       font-weight:800;
@@ -116,9 +114,10 @@
       outline:none !important;
       border:none !important;
     }
-    .popup-link:focus{
-      outline:none !important;
-      border:none !important;
+
+    /* ★ Added: exact +2px before the Hike Page row */
+    .hike-gap{
+      margin-top:2px;
     }
 
     @media (max-width:440px){
@@ -237,8 +236,15 @@ function specsHTML(s,u){
       <div class="spec-row">${icons.clock}<span class="spec-value">${s.duration}</span></div>
       <div class="spec-row">${icons.length}<span class="spec-value">${s.length}</span></div>
       <div class="spec-row">${icons.ascent}<span class="spec-value">${s.ascent}</span></div>
-      <div class="spec-row">${icons.walk}<a class="popup-link" href="${u.hikeUrl}" target="_blank">Hike Page</a></div>
-      <div class="spec-row">${icons.directions}<a class="popup-link" href="${u.directionsUrl}" target="_blank">Directions</a></div>
+
+      <!-- ★ Added hike-gap class for the +2px extra space -->
+      <div class="spec-row hike-gap">
+        ${icons.walk}<a class="popup-link" href="${u.hikeUrl}" target="_blank">Hike Page</a>
+      </div>
+
+      <div class="spec-row">
+        ${icons.directions}<a class="popup-link" href="${u.directionsUrl}" target="_blank">Directions</a>
+      </div>
     </div>`;
 }
 
@@ -273,9 +279,7 @@ function addRoute(id,line){
         "line-color":RED,
         "line-width":3,
         "line-opacity":0.95,
-
-        /* ★ makes route colour change instant */
-        "line-color-transition": { duration: 0 }
+        "line-color-transition":{ duration:0 }
       }
     });
   }
