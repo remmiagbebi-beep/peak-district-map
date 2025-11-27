@@ -73,18 +73,17 @@
     .popup-heading{
       font-weight:800;
       font-size:11px;
-      margin:2px 0 6px 0; /* ★ moved title down by exactly 2px */
+      margin:2px 0 6px 0;
       color:#1E1E1E;
     }
 
-    .specs{
-      font-size:10px;
+    /* ONLY the three red stats move up 2px */
+    .stats-group{
+      transform:translateY(-2px);
       display:flex;
       flex-direction:column;
       gap:3px;
       align-items:center;
-      transform: translateY(1px);
-      margin-top:2px;
     }
 
     .spec-row{
@@ -105,7 +104,11 @@
       filter: invert(41%) sepia(97%) saturate(1476%) hue-rotate(191deg) brightness(96%) contrast(101%);
     }
 
-    .spec-value{ font-weight:800; color:#EC2629; font-size:11px }
+    .spec-value{
+      font-weight:800;
+      color:#EC2629;
+      font-size:11px;
+    }
 
     .popup-link{
       color:#3899EC;
@@ -113,7 +116,6 @@
       font-size:11px;
       text-decoration:none;
       outline:none !important;
-      border:none !important;
     }
 
     .hike-gap{
@@ -231,18 +233,18 @@ const icons = {
 
 function specsHTML(s,u){
   return `
-    <div class="specs">
+    <div class="stats-group">
       <div class="spec-row">${icons.clock}<span class="spec-value">${s.duration}</span></div>
       <div class="spec-row">${icons.length}<span class="spec-value">${s.length}</span></div>
       <div class="spec-row">${icons.ascent}<span class="spec-value">${s.ascent}</span></div>
+    </div>
 
-      <div class="spec-row hike-gap">
-        ${icons.walk}<a class="popup-link" href="${u.hikeUrl}" target="_blank">Hike Page</a>
-      </div>
+    <div class="spec-row hike-gap">
+      ${icons.walk}<a class="popup-link" href="${u.hikeUrl}" target="_blank">Hike Page</a>
+    </div>
 
-      <div class="spec-row">
-        ${icons.directions}<a class="popup-link" href="${u.directionsUrl}" target="_blank">Directions</a>
-      </div>
+    <div class="spec-row">
+      ${icons.directions}<a class="popup-link" href="${u.directionsUrl}" target="_blank">Directions</a>
     </div>`;
 }
 
