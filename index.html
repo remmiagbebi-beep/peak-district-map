@@ -70,6 +70,7 @@
       flex-direction:column;
       justify-content:center;
       line-height:1.2;
+      transform: translateY(2px); /* move whole text group down by 2px */
     }
 
     /* all popup text reduced by 2px */
@@ -96,7 +97,7 @@
       gap:4px;
     }
 
-    .icon{ width:16px; height:16px; flex:0 0 16px; color:#1E1E1E }
+    .icon{ width:16px; height:16px; flex:0 0 16px; color:#EC2629 } /* stat icons in red */
     .spec-value{ font-weight:800; color:#EC2629; font-size:11px } /* was 13 */
 
     .popup-actions{
@@ -107,12 +108,14 @@
       align-items:center;
       margin-top:6px;
     }
+    /* Hike Page & Directions same font as stats (spec-value) except colour */
     .popup-link{
       color:#3899EC;
-      font-weight:600;
+      font-weight:800;         /* match stats weight */
+      font-size:11px;          /* match stats size */
+      line-height:1.2;
       text-decoration:none;
       white-space:nowrap;
-      font-size:11px; /* was 13 */
       outline:none !important;
       box-shadow:none !important;
       border:none !important;
