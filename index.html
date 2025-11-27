@@ -27,7 +27,7 @@
       display:block;
       box-sizing:border-box;
       font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif !important;
-      text-transform:uppercase; /* capitalise all popup text */
+      text-transform:capitalize; /* <<< first letter capital only */
     }
 
     .popup-card{
@@ -71,7 +71,7 @@
       flex-direction:column;
       justify-content:center;
       line-height:1.2;
-      transform: translateY(-1px); /* move whole text group up by 1px */
+      transform: translateY(-1px);
     }
 
     .popup-heading{
@@ -87,33 +87,31 @@
       font-size:10px;
       display:flex;
       flex-direction:column;
-      gap:3px;                 /* same spacing across stats and links */
+      gap:3px;
       align-items:center;
-      transform: translateY(1px); /* move everything under the title down by 1px */
+      transform: translateY(1px);
     }
+
     .spec-row{
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:4px;                 /* icon to text spacing */
+      gap:4px;
     }
 
     .icon{ width:16px; height:16px; flex:0 0 16px }
-    .icon-red{ color:#EC2629 }  /* stats red */
-    .icon-blue{ color:#3899EC } /* kept for svg fallbacks */
+    .icon-red{ color:#EC2629 }
+    .icon-blue{ color:#3899EC }
+
+    .icon-img{
+      width:16px;
+      height:16px;
+      display:block;
+      filter: invert(41%) sepia(97%) saturate(1476%) hue-rotate(191deg) brightness(96%) contrast(101%);
+    }
 
     .spec-value{ font-weight:800; color:#EC2629; font-size:11px }
 
-    .popup-actions{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-      justify-content:center;
-      align-items:center;
-      margin-top:6px;
-    }
-
-    /* Hike Page & Directions: same font as stats, only colour differs */
     .popup-link{
       color:#3899EC;
       font-weight:800;
@@ -121,18 +119,6 @@
       line-height:1.2;
       text-decoration:none;
       white-space:nowrap;
-      outline:none !important;
-      box-shadow:none !important;
-      border:none !important;
-    }
-
-    /* Make external SVG images blue and sized like the inline icons */
-    .icon-img{
-      width:16px;
-      height:16px;
-      display:block;
-      filter: invert(41%) sepia(97%) saturate(1476%) hue-rotate(191deg) brightness(96%) contrast(101%);
-      /* turns black SVGs into #3899EC */
     }
 
     @media (max-width:440px){
@@ -203,6 +189,7 @@ const map = new mapboxgl.Map({
 });
 map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
 
+/* Hover system */
 const markerElsById = {};
 const routeLayerId  = {};
 let hoveredId = null;
@@ -235,16 +222,17 @@ function setHovered(id){
   applyHoverState();
 }
 
-/* Icons */
+/* Icons with your GitHub SVGs */
 const icons = {
-  /* stats (red inline svgs) */
-  clock:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
-  length:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
-  ascent:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M6 18l5-6 4 4 5-7"/><path d="M20 7h-5v5"/></svg>`,
+  clock:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
 
-  /* links (external svg files from your repo → coloured blue via filter) */
-  walk:`<img class="icon icon-img" src="https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/icons/walking-person-go-walk-move-svgrepo-com.svg" alt="walk icon">`,
-  directions:`<img class="icon icon-img" src="https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/icons/marker-svgrepo-com.svg" alt="directions icon">`
+  length:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
+
+  ascent:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M6 18l5-6 4 4 5-7"/><path d="M20 7h-5v5"/></svg>`,
+
+  walk:`<img class="icon-img" src="https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/icons/walking-person-go-walk-move-svgrepo-com.svg">`,
+
+  directions:`<img class="icon-img" src="https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/icons/marker-svgrepo-com.svg">`
 };
 
 function specsHTML(s,u){
@@ -253,8 +241,8 @@ function specsHTML(s,u){
       <div class="spec-row">${icons.clock}<span class="spec-value">${s.duration}</span></div>
       <div class="spec-row">${icons.length}<span class="spec-value">${s.length}</span></div>
       <div class="spec-row">${icons.ascent}<span class="spec-value">${s.ascent}</span></div>
-      <div class="spec-row">${icons.walk}<a class="popup-link" href="${u.hikeUrl}" target="_blank" rel="noopener">Hike Page</a></div>
-      <div class="spec-row">${icons.directions}<a class="popup-link" href="${u.directionsUrl}" target="_blank" rel="noopener">Directions</a></div>
+      <div class="spec-row">${icons.walk}<a class="popup-link" href="${u.hikeUrl}" target="_blank">Hike Page</a></div>
+      <div class="spec-row">${icons.directions}<a class="popup-link" href="${u.directionsUrl}" target="_blank">Directions</a></div>
     </div>`;
 }
 
@@ -269,12 +257,15 @@ function popupHtmlFor(h){
     </div>`;
 }
 
+/* GPX loader */
 async function loadGpx(url){
   const res=await fetch(url);
   const xml=new DOMParser().parseFromString(await res.text(),"text/xml");
   const gj=toGeoJSON.gpx(xml);
   return gj.features.find(f=>f.geometry && f.geometry.type==="LineString");
 }
+
+/* Route lines */
 function addRoute(id,line){
   const src=`route-src-${id}`;
   const lyr=`route-lyr-${id}`;
@@ -286,7 +277,7 @@ function addRoute(id,line){
       source:src,
       paint:{
         "line-color":RED,
-        "line-width":3,   /* reduced thickness by 1px (from 4 to 3) */
+        "line-width":3, /* reduced by 1px */
         "line-opacity":0.95
       }
     });
