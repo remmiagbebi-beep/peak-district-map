@@ -10,10 +10,8 @@
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
 
-    /* Hide Mapbox logo + attribution */
-    .mapboxgl-ctrl-logo,
-    .mapboxgl-ctrl-attrib,
-    .mapboxgl-ctrl-attrib-inner { display:none !important; visibility:hidden !important; }
+    /* Hide Mapbox logo and attribution */
+    .mapboxgl-ctrl-logo, .mapboxgl-ctrl-attrib, .mapboxgl-ctrl-attrib-inner { display:none !important; visibility:hidden !important; }
 
     .marker{ cursor:pointer !important }
     .marker svg{ transform:scale(0.85); transform-origin:center }
@@ -108,21 +106,49 @@ const map=new mapboxgl.Map({
   style:"mapbox://styles/mapbox/satellite-streets-v12",
   center:[-1.78,53.41],
   zoom:11,
-  attributionControl:false   // 1) don't add the attrib control
+  attributionControl:false
 });
-map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
 
-/* 2) remove any logo/attrib nodes if injected (and keep them gone) */
-function nukeBranding(){
-  document.querySelectorAll('.mapboxgl-ctrl-logo,.mapboxgl-ctrl-attrib,.mapboxgl-ctrl-attrib-inner')
-    .forEach(el=>el.remove());
+/* Navigation control plus fullscreen control */
+const nav = new mapboxgl.NavigationControl({ showCompass:true, showZoom:true });
+map.addControl(nav, "bottom-right");
+const fs = new mapboxgl.FullscreenControl();
+map.addControl(fs, "bottom-right");
+
+/* Move the fullscreen button into the same control group
+   and place it between zoom-out and compass for a seamless look */
+function mergeFullscreenIntoNav(){
+  const root = map.getContainer();
+  const corner = root.querySelector('.mapboxgl-ctrl-bottom-right');
+  if(!corner) return;
+
+  const groups = corner.querySelectorAll('.mapboxgl-ctrl-group');
+  if(groups.length < 2) return;
+
+  const navGroup = groups[0];           // zoom in, zoom out, compass
+  const fsGroup  = groups[1];           // fullscreen on its own group
+  const fsBtn = fsGroup.querySelector('button.mapboxgl-ctrl-fullscreen');
+  const zoomOutBtn = navGroup.querySelector('.mapboxgl-ctrl-zoom-out');
+
+  if(fsBtn && zoomOutBtn){
+    navGroup.insertBefore(fsBtn, zoomOutBtn.nextSibling); // insert after zoom-out
+    fsGroup.remove(); // remove the now-empty group
+  }
 }
+
+/* Ensure branding stays removed if re-inserted */
+function nukeBranding(){
+  document.querySelectorAll('.mapboxgl-ctrl-logo,.mapboxgl-ctrl-attrib,.mapboxgl-ctrl-attrib-inner').forEach(el=>el.remove());
+}
+
 map.on('load', () => {
+  mergeFullscreenIntoNav();
   nukeBranding();
-  new MutationObserver(nukeBranding).observe(map.getContainer(), {childList:true, subtree:true});
+  new MutationObserver(() => { mergeFullscreenIntoNav(); nukeBranding(); })
+    .observe(map.getContainer(), {childList:true, subtree:true});
 });
 
-/* Hover system (unchanged) */
+/* Hover system */
 const markerElsById={}, routeLayerId={}; let hoveredId=null;
 function setMarkerColor(id,c){ const el=markerElsById[id]; if(!el) return; const p=el.querySelector("svg path"); if(p) p.setAttribute("fill",c); }
 function setRouteColor(id,c){ const lyr=routeLayerId[id]; if(lyr && map.getLayer(lyr)) map.setPaintProperty(lyr,"line-color",c); }
@@ -130,7 +156,7 @@ function applyHoverState(){
   Object.keys(routeLayerId).forEach(id=>setRouteColor(id,RED));
   Object.keys(markerElsById).forEach(id=>setMarkerColor(id,RED));
   if(hoveredId){ setRouteColor(hoveredId,BLUE); setMarkerColor(hoveredId,BLUE); map.getCanvas().style.cursor="pointer"; }
-  else map.getCanvas().style.cursor="";
+  else { map.getCanvas().style.cursor=""; }
 }
 function setHovered(id){ hoveredId=id; applyHoverState(); }
 
@@ -180,7 +206,7 @@ function addRoute(id,line){
   if(!map.getSource(src)) map.addSource(src,{type:"geojson",data:line});
   if(!map.getLayer(lyr)){
     map.addLayer({ id:lyr, type:"line", source:src,
-      paint:{ "line-color":RED, "line-width":3, "line-opacity":0.95, "line-color-transition":{duration:0} }
+      paint:{ "line-color":RED, "line-width":3, "line-opacity":0.95, "line-color-transition":{ duration:0 } }
     });
   }
   routeLayerId[id]=lyr;
