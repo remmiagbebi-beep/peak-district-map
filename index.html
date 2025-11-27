@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
   <style>
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
@@ -27,7 +28,7 @@
       display:block;
       box-sizing:border-box;
       font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif !important;
-      text-transform:capitalize; /* <<< first letter capital only */
+      text-transform:capitalize;
     }
 
     .popup-card{
@@ -37,8 +38,6 @@
       border-radius:12px;
       overflow:hidden;
       width:fit-content;
-      min-width:auto;
-      max-width:none;
       height:130px;
     }
 
@@ -47,15 +46,14 @@
       flex:0 0 140px;
       border-radius:12px 0 0 12px;
       overflow:hidden;
-      background:#000;
       height:100%;
+      background:#000;
     }
     .img-wrap img{
-      display:block;
       width:100%;
       height:100%;
       object-fit:cover;
-      transform:translateZ(0);
+      display:block;
     }
 
     .popup-body{
@@ -65,8 +63,6 @@
       min-width:160px;
       max-width:160px;
       text-align:center;
-      word-break:break-word;
-      overflow:visible;
       display:flex;
       flex-direction:column;
       justify-content:center;
@@ -77,10 +73,8 @@
     .popup-heading{
       font-weight:800;
       font-size:11px;
-      line-height:1.15;
-      margin:0 0 6px 0;
+      margin:0 0 6px;
       color:#1E1E1E;
-      white-space:normal;
     }
 
     .specs{
@@ -103,22 +97,28 @@
     .icon-red{ color:#EC2629 }
     .icon-blue{ color:#3899EC }
 
+    /* 25% smaller walking man + marker */
     .icon-img{
-      width:16px;
-      height:16px;
+      width:12px;      /* ↓ 25% smaller */
+      height:12px;
       display:block;
       filter: invert(41%) sepia(97%) saturate(1476%) hue-rotate(191deg) brightness(96%) contrast(101%);
     }
 
     .spec-value{ font-weight:800; color:#EC2629; font-size:11px }
 
+    /* remove black outline around Hike Page link */
     .popup-link{
       color:#3899EC;
       font-weight:800;
       font-size:11px;
-      line-height:1.2;
       text-decoration:none;
-      white-space:nowrap;
+      outline:none !important;
+      border:none !important;
+    }
+    .popup-link:focus{
+      outline:none !important;
+      border:none !important;
     }
 
     @media (max-width:440px){
@@ -209,6 +209,7 @@ function setRouteColor(id,color){
 function applyHoverState(){
   Object.keys(routeLayerId).forEach(id=>setRouteColor(id,RED));
   Object.keys(markerElsById).forEach(id=>setMarkerColor(id,RED));
+
   if(hoveredId){
     setRouteColor(hoveredId,BLUE);
     setMarkerColor(hoveredId,BLUE);
@@ -222,16 +223,11 @@ function setHovered(id){
   applyHoverState();
 }
 
-/* Icons with your GitHub SVGs */
 const icons = {
   clock:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
-
   length:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
-
   ascent:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M6 18l5-6 4 4 5-7"/><path d="M20 7h-5v5"/></svg>`,
-
   walk:`<img class="icon-img" src="https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/icons/walking-person-go-walk-move-svgrepo-com.svg">`,
-
   directions:`<img class="icon-img" src="https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/icons/marker-svgrepo-com.svg">`
 };
 
@@ -257,7 +253,6 @@ function popupHtmlFor(h){
     </div>`;
 }
 
-/* GPX loader */
 async function loadGpx(url){
   const res=await fetch(url);
   const xml=new DOMParser().parseFromString(await res.text(),"text/xml");
@@ -265,7 +260,6 @@ async function loadGpx(url){
   return gj.features.find(f=>f.geometry && f.geometry.type==="LineString");
 }
 
-/* Route lines */
 function addRoute(id,line){
   const src=`route-src-${id}`;
   const lyr=`route-lyr-${id}`;
@@ -277,8 +271,11 @@ function addRoute(id,line){
       source:src,
       paint:{
         "line-color":RED,
-        "line-width":3, /* reduced by 1px */
-        "line-opacity":0.95
+        "line-width":3,
+        "line-opacity":0.95,
+
+        /* ★ makes route colour change instant */
+        "line-color-transition": { duration: 0 }
       }
     });
   }
@@ -301,9 +298,6 @@ map.on("load", async () => {
 
     el.addEventListener("mouseenter",()=>setHovered(h.id));
     el.addEventListener("mouseleave",()=>setHovered(null));
-    el.addEventListener("click",()=>{
-      if(window.innerWidth<700) map.easeTo({center:h.coords,duration:400});
-    });
   });
 
   for(const h of hikes){
