@@ -6,10 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-
   <style>
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
+
+    /* Hide Mapbox logo and attribution (you'll handle attribution elsewhere) */
+    .mapboxgl-ctrl-logo,
+    .mapboxgl-ctrl-attrib { display:none !important; }
 
     .marker{ cursor:pointer !important }
     .marker svg{ transform:scale(0.85); transform-origin:center }
@@ -72,7 +75,7 @@
     .popup-heading{
       font-weight:800;
       font-size:11px;
-      margin:2px 0 6px 0;
+      margin:2px 0 6px 0; /* title down 2px */
       color:#1E1E1E;
     }
 
@@ -87,7 +90,7 @@
     }
 
     .stats-group{
-      transform:translateY(-2px);
+      transform:translateY(-2px); /* move only stats up 2px */
       display:flex;
       flex-direction:column;
       gap:3px;
@@ -97,7 +100,7 @@
     .links-group{
       display:flex;
       flex-direction:column;
-      gap:3px;  /* ensure same gap between Hike Page and Directions */
+      gap:3px;              /* restore original gap between links */
       align-items:center;
     }
 
@@ -112,6 +115,7 @@
     .icon-red{ color:#EC2629 }
     .icon-blue{ color:#3899EC }
 
+    /* 25% smaller blue image icons */
     .icon-img{
       width:12px;
       height:12px;
@@ -142,6 +146,7 @@
       box-shadow:none !important;
     }
 
+    /* +2px extra space between ascent and Hike Page */
     .hike-gap{ margin-top:2px }
 
     @media (max-width:440px){
@@ -204,12 +209,14 @@ const map = new mapboxgl.Map({
   container:"map",
   style:"mapbox://styles/mapbox/satellite-streets-v12",
   center:[-1.78,53.41],
-  zoom:11
+  zoom:11,
+  attributionControl:false  // remove default attribution control
 });
 map.addControl(new mapboxgl.NavigationControl(),"bottom-right");
 
+/* Hover system */
 const markerElsById = {};
-const routeLayerId = {};
+const routeLayerId  = {};
 let hoveredId = null;
 
 function setMarkerColor(id,color){
@@ -227,7 +234,6 @@ function setRouteColor(id,color){
 function applyHoverState(){
   Object.keys(routeLayerId).forEach(id=>setRouteColor(id,RED));
   Object.keys(markerElsById).forEach(id=>setMarkerColor(id,RED));
-
   if(hoveredId){
     setRouteColor(hoveredId,BLUE);
     setMarkerColor(hoveredId,BLUE);
@@ -238,6 +244,7 @@ function applyHoverState(){
 }
 function setHovered(id){ hoveredId=id; applyHoverState(); }
 
+/* Icons */
 const icons = {
   clock:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
   length:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
@@ -249,13 +256,11 @@ const icons = {
 function specsHTML(s,u){
   return `
     <div class="specs">
-
       <div class="stats-group">
         <div class="spec-row">${icons.clock}<span class="spec-value">${s.duration}</span></div>
         <div class="spec-row">${icons.length}<span class="spec-value">${s.length}</span></div>
         <div class="spec-row">${icons.ascent}<span class="spec-value">${s.ascent}</span></div>
       </div>
-
       <div class="links-group">
         <div class="spec-row hike-gap">
           ${icons.walk}<a class="popup-link" href="${u.hikeUrl}" target="_blank">Hike Page</a>
@@ -264,7 +269,6 @@ function specsHTML(s,u){
           ${icons.directions}<a class="popup-link" href="${u.directionsUrl}" target="_blank">Directions</a>
         </div>
       </div>
-
     </div>`;
 }
 
@@ -279,6 +283,7 @@ function popupHtmlFor(h){
     </div>`;
 }
 
+/* GPX loader */
 async function loadGpx(url){
   const res=await fetch(url);
   const xml=new DOMParser().parseFromString(await res.text(),"text/xml");
@@ -286,6 +291,7 @@ async function loadGpx(url){
   return gj.features.find(f=>f.geometry && f.geometry.type==="LineString");
 }
 
+/* Route lines */
 function addRoute(id,line){
   const src=`route-src-${id}`;
   const lyr=`route-lyr-${id}`;
@@ -296,10 +302,10 @@ function addRoute(id,line){
       type:"line",
       source:src,
       paint:{
-        "line-color":"#EC2629",
+        "line-color":RED,
         "line-width":3,
         "line-opacity":0.95,
-        "line-color-transition":{ duration:0 }
+        "line-color-transition":{ duration:0 } /* instant hover change */
       }
     });
   }
@@ -310,7 +316,7 @@ map.on("load", async () => {
   const bounds=new mapboxgl.LngLatBounds();
 
   hikes.forEach(h=>{
-    const marker=new mapboxgl.Marker({color:"#EC2629"})
+    const marker=new mapboxgl.Marker({color:RED})
       .setLngLat(h.coords)
       .setPopup(new mapboxgl.Popup({offset:22, closeButton:false}).setHTML(popupHtmlFor(h)))
       .addTo(map);
