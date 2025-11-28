@@ -247,7 +247,9 @@ map.on("load", async () => {
     }catch(e){}
   }
 
-  map.fitBounds(bounds,{ padding:110, maxZoom:11 });
+  // Mobile specific zoom: closer on small screens
+  const isMobile = window.innerWidth < 600;
+  map.fitBounds(bounds,{ padding:110, maxZoom: isMobile ? 12 : 11 });
 });
 </script>
 </body>
