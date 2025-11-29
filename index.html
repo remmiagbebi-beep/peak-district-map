@@ -10,7 +10,7 @@
     html, body { margin:0; height:100% }
     #map { position:absolute; inset:0 }
 
-    /* Hide Mapbox default attribution/logo (you handle attribution elsewhere) */
+    /* You handle attribution elsewhere */
     .mapboxgl-ctrl-logo,
     .mapboxgl-ctrl-attrib,
     .mapboxgl-ctrl-attrib-inner { display:none !important; visibility:hidden !important; }
@@ -48,13 +48,15 @@
     .spec-value{ font-weight:800; color:#EC2629; font-size:11px }
     .popup-link{ color:#3899EC; font-weight:800; font-size:11px; text-decoration:none; }
 
-    /* iOS "fullscreen tab" mode when opened as ?fs=1 */
+    /* iOS fullscreen tab mode (?fs=1) */
     body.ios-fullscreen #map{ position:fixed; inset:0; z-index:1; background:#000 }
     body.ios-fullscreen .mapboxgl-ctrl-bottom-right{ z-index:2 }
 
-    /* Make the custom iOS fullscreen control match Mapbox buttons */
+    /* iOS fullscreen button should look identical to Mapbox buttons */
     .mapboxgl-ctrl-group > button.ios-fs-btn{
       background:#fff !important;
+      outline:none !important;
+      box-shadow:none; /* separators are handled by Mapbox; no custom shadow */
     }
     .mapboxgl-ctrl-group > button.ios-fs-btn:hover,
     .mapboxgl-ctrl-group > button.ios-fs-btn:active{
@@ -131,7 +133,7 @@ if(isIOS() && params.get("fs")==="1"){
   hideMbFs(); setTimeout(hideMbFs, 500);
 }
 
-/* iOS custom fullscreen button (black icon), inserted with Mapbox styling */
+/* iOS custom fullscreen button (black icon) inserted into the SAME group as +/− */
 function addIOSFullscreenButton(){
   if(!isIOS()) return;
   if(params.get("fs")==="1") return; // don't show inside the fullscreen tab
@@ -139,6 +141,7 @@ function addIOSFullscreenButton(){
   const corner = map.getContainer().querySelector('.mapboxgl-ctrl-bottom-right');
   if(!corner) return;
 
+  // find the existing group that contains zoom-in
   const navGroup = Array.from(corner.querySelectorAll('.mapboxgl-ctrl-group'))
     .find(g => g.querySelector('.mapboxgl-ctrl-zoom-in'));
   if(!navGroup) return;
@@ -146,15 +149,13 @@ function addIOSFullscreenButton(){
   const zoomOut = navGroup.querySelector('.mapboxgl-ctrl-zoom-out');
   const compass = navGroup.querySelector('.mapboxgl-ctrl-compass');
 
-  const iosBtnGroup=document.createElement('div');
-  iosBtnGroup.className='mapboxgl-ctrl-group';
-
+  // create just a BUTTON (no extra group wrapper)
   const btn=document.createElement('button');
   btn.className='mapboxgl-ctrl-icon ios-fs-btn';
   btn.type='button';
   btn.setAttribute('aria-label','Fullscreen');
 
-  /* Pure black icon to match iOS +/- */
+  // pure black icon to match iOS +/- icons
   btn.innerHTML = `
     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
       <polyline points="4,9 4,4 9,4" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
@@ -164,12 +165,11 @@ function addIOSFullscreenButton(){
     </svg>
   `;
 
-  iosBtnGroup.appendChild(btn);
-
+  // insert directly after zoom-out and before compass so separators are straight
   if(zoomOut){
-    navGroup.insertBefore(iosBtnGroup, compass ? compass : zoomOut.nextSibling);
+    navGroup.insertBefore(btn, compass ? compass : zoomOut.nextSibling);
   }else{
-    navGroup.appendChild(iosBtnGroup);
+    navGroup.appendChild(btn);
   }
 
   btn.addEventListener('click',()=>{
