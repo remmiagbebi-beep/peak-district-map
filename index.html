@@ -132,19 +132,12 @@ map.addControl(new mapboxgl.FullscreenControl(), "bottom-right");
 const markerElsById={}, routeLayerId={}; let hoveredId=null;
 function setMarkerColor(id,c){ const el=markerElsById[id]; if(!el) return; const p=el.querySelector("svg path"); if(p) p.setAttribute("fill",c); }
 function setRouteColor(id,c){ const lyr=routeLayerId[id]; if(lyr && map.getLayer(lyr)) map.setPaintProperty(lyr,"line-color",c); }
-function applyHoverState(){
-  Object.keys(routeLayerId).forEach(id=>setRouteColor(id,RED));
-  Object.keys(markerElsById).forEach(id=>setMarkerColor(id,RED));
-  if(hoveredId){ setRouteColor(hoveredId,BLUE); setMarkerColor(hoveredId,BLUE); map.getCanvas().style.cursor="pointer"; }
-  else { map.getCanvas().style.cursor=""; }
-}
-function setHovered(id){ hoveredId=id; applyHoverState(); }
 
 /* ICONS */
 const icons={
   clock:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
   length:`<svg class="icon icon-red" viewBox="0 24 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
-  ascent:`<svg class="icon icon-red" viewBox="0 24 24 24  fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M6 18l5-6 4 4 5-7"/><path d="M20 7h-5v5"/></svg>`,
+  ascent:`<svg class="icon icon-red" viewBox="0 24 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M6 18l5-6 4 4 5-7"/><path d="M20 7h-5v5"/></svg>`,
   walk:`<img class="icon-img" src="https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/icons/walking-person-go-walk-move-svgrepo-com.svg">`,
   directions:`<img class="icon-img" src="https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/icons/marker-svgrepo-com.svg">`
 };
@@ -175,6 +168,7 @@ function popupHtmlFor(h){
     </div>`;
 }
 
+/* GPX */
 async function loadGpx(url){
   const res=await fetch(url);
   const xml=new DOMParser().parseFromString(await res.text(),"text/xml");
@@ -211,9 +205,6 @@ map.on("load", async () => {
     el.classList.add("marker");
     markerElsById[h.id]=el;
     bounds.extend(h.coords);
-
-    el.addEventListener("mouseenter",()=>setHovered(h.id));
-    el.addEventListener("mouseleave",()=>setHovered(null));
   });
 
   for(const h of hikes){
@@ -225,18 +216,17 @@ map.on("load", async () => {
   }
 
   /* -------------------------------
-     MOBILE ZOOM FIX (THIS IS THE FIX)
+     MOBILE ZOOM FIX (updated)
      ------------------------------- */
 
   const isMobile = window.innerWidth < 600;
-  const mobileMinZoom = 13.2;   // FORCE THIS ZOOM LEVEL ON MOBILE
+  const mobileMinZoom = 12.5;   // <-- UPDATED HERE
 
   map.fitBounds(bounds,{
     padding: isMobile ? 30 : 110,
     maxZoom: isMobile ? 14 : 11
   });
 
-  // FORCE MINIMUM ZOOM on mobile after fitBounds runs
   if (isMobile) {
     map.once('idle', () => {
       if (map.getZoom() < mobileMinZoom) map.setZoom(mobileMinZoom);
