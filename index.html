@@ -45,10 +45,9 @@
     .spec-value{ font-weight:800; color:#EC2629; font-size:11px }
     .popup-link{ color:#3899EC; font-weight:800; font-size:11px; text-decoration:none; }
 
-    @media (max-width:440px){
-      .img-wrap{ width:120px; flex-basis:120px }
-      .popup-card{ min-width:290px; max-width:320px; height:190px }
-    }
+    /* iOS fullscreen page mode */
+    body.ios-fullscreen #map{ position:fixed; inset:0; z-index:1; background:#000 }
+    body.ios-fullscreen .mapboxgl-ctrl-bottom-right{ z-index:2 }
   </style>
 </head>
 <body>
@@ -92,14 +91,92 @@ const map=new mapboxgl.Map({
   attributionControl:false
 });
 
+/* Controls for desktop and Android */
 const nav = new mapboxgl.NavigationControl({ showCompass:true, showZoom:true });
 map.addControl(nav, "bottom-right");
-map.addControl(new mapboxgl.FullscreenControl(), "bottom-right");
+const fs  = new mapboxgl.FullscreenControl();
+map.addControl(fs, "bottom-right");
+
+/* iOS detection and query helper */
+function isIOS(){
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  const iOS = /iPad|iPhone|iPod/.test(ua);
+  const iPadOS = platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  return iOS || iPadOS;
+}
+const params = new URLSearchParams(location.search);
+
+/* If opened as ?fs=1 on iOS, apply fullscreen page mode and hide Mapbox FS button */
+if (isIOS() && params.get("fs") === "1") {
+  document.body.classList.add("ios-fullscreen");
+  // Hide Mapbox fullscreen control inside the fullscreen tab
+  const hideMbFs = () => {
+    const mb = document.querySelector('.mapboxgl-ctrl-fullscreen');
+    if (mb) mb.style.display = 'none';
+  };
+  // Try now and again after controls mount
+  hideMbFs();
+  setTimeout(hideMbFs, 500);
+}
+
+/* Add iOS fullscreen button under zoom-out in the Mapbox control group */
+function addIOSFullscreenButton(){
+  if(!isIOS()) return;
+
+  const corner = map.getContainer().querySelector('.mapboxgl-ctrl-bottom-right');
+  if(!corner) return;
+
+  const navGroup = Array.from(corner.querySelectorAll('.mapboxgl-ctrl-group'))
+    .find(g => g.querySelector('.mapboxgl-ctrl-zoom-in'));
+  if(!navGroup) return;
+
+  const zoomOut = navGroup.querySelector('.mapboxgl-ctrl-zoom-out');
+  const compass = navGroup.querySelector('.mapboxgl-ctrl-compass');
+
+  // Create button styled like Mapbox controls
+  const iosBtnGroup = document.createElement('div');
+  iosBtnGroup.className = 'mapboxgl-ctrl-group';
+
+  const btn = document.createElement('button');
+  btn.className = 'mapboxgl-ctrl-icon';
+  btn.type = 'button';
+  btn.setAttribute('aria-label','Fullscreen');
+
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <polyline points="4,9 4,4 9,4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      <polyline points="20,9 20,4 15,4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      <polyline points="4,15 4,20 9,20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      <polyline points="20,15 20,20 15,20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    </svg>
+  `;
+
+  iosBtnGroup.appendChild(btn);
+
+  // Insert under zoom-out and before compass if present
+  if (zoomOut) {
+    navGroup.insertBefore(iosBtnGroup, compass ? compass : zoomOut.nextSibling);
+  } else {
+    navGroup.appendChild(iosBtnGroup);
+  }
+
+  // On iOS, open a new tab with ?fs=1 like your working flyover code
+  btn.addEventListener('click', () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("fs", "1");
+    window.open(url.toString(), "_blank");
+  });
+}
+
+map.on('load', () => {
+  addIOSFullscreenButton();
+});
 
 const icons={
   clock:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>`,
-  length:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
-  ascent:`<svg class="icon icon-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M6 18l5-6 4 4 5-7"/><path d="M20 7h-5v5"/></svg>`,
+  length:`<svg class="icon icon-red" viewBox="0 24 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18"/><path d="M6 8v8M10 8v8M14 8v8M18 8v8"/></svg>`,
+  ascent:`<svg class="icon icon-red" viewBox="0 24 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18"/><path d="M6 18l5-6 4 4 5-7"/><path d="M20 7h-5v5"/></svg>`,
   walk:`<img class="icon-img" src="https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/icons/walking-person-go-walk-move-svgrepo-com.svg">`,
   directions:`<img class="icon-img" src="https://raw.githubusercontent.com/remmiagbebi-beep/peak-district-map/main/icons/marker-svgrepo-com.svg">`
 };
@@ -154,14 +231,14 @@ map.on("load", async () => {
 
   // markers
   hikes.forEach(h=>{
-    const m=new mapboxgl.Marker({color:RED})
+    new mapboxgl.Marker({color:RED})
       .setLngLat(h.coords)
       .setPopup(new mapboxgl.Popup({offset:22, closeButton:false}).setHTML(popupHtmlFor(h)))
       .addTo(map);
     bounds.extend(h.coords);
   });
 
-  // routes (wait for all before fitting bounds)
+  // routes
   await Promise.all(hikes.map(async h=>{
     try{
       const line = await loadGpx(h.gpx);
@@ -172,9 +249,9 @@ map.on("load", async () => {
     }catch(e){}
   }));
 
-  // Fit, then cap zoom ONLY if Mapbox fitted too close on mobile
+  // mobile fit with max zoom cap so it never ends up too close
   const isMobile = window.innerWidth < 600;
-  const mobileMaxZoom = 11.6;  // cap: never end closer than this on phones
+  const mobileMaxZoom = 11.6;
 
   map.fitBounds(bounds,{
     padding: isMobile ? 30 : 110,
@@ -183,7 +260,7 @@ map.on("load", async () => {
 
   if (isMobile) {
     map.once('idle', () => {
-      if (map.getZoom() > mobileMaxZoom) map.setZoom(mobileMaxZoom); // only zooms OUT, never in
+      if (map.getZoom() > mobileMaxZoom) map.setZoom(mobileMaxZoom);
     });
   }
 });
