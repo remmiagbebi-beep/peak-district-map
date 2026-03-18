@@ -12,7 +12,7 @@
     #map { position:absolute; inset:0 }
 
     .marker{ cursor:pointer !important }
-    .marker svg{ transform:scale(0.85); transform-origin:center }
+    .marker svg{ transform:scale(0.85); transform-origin:bottom center }
 
     .mapboxgl-popup{ filter:drop-shadow(0 14px 28px rgba(0,0,0,.45)); }
     .mapboxgl-popup-tip{ display:none !important; }
@@ -120,6 +120,19 @@
     }
 
     /* ===== REMOVE TAP/FOCUS HIGHLIGHTS ===== */
+    .eye-btn {
+      position:absolute; top:6px; left:6px; background:rgba(0,0,0,.5);
+      border:none; border-radius:50%; width:20px; height:20px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; z-index:2; padding:0;
+    }
+    .eye-btn:hover { background:rgba(0,0,0,.75); }
+    .marker-eye-overlay {
+      display:none; position:absolute; width:0; height:0; overflow:visible;
+      top:-10px; left:50%; transform:translateX(-50%); pointer-events:none;
+    }
+    .marker-eye-overlay > div { pointer-events:auto; cursor:pointer; }
+    .marker.info-hidden .marker-eye-overlay { display:block; pointer-events:auto; }
+
     .popup-link,
     .popup-link:focus,
     .popup-link:active,
@@ -294,8 +307,10 @@ function specsHTML(s,u){
     </div>`;
 }
 function popupHtmlFor(h){
+  const eyeBtn=`<button class="eye-btn" onclick="toggleInfo('${h.id}',event)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>`;
   return `
     <div class="popup-card">
+      ${eyeBtn}
       <div class="img-wrap"><img src="${h.photo}" alt="${h.name}"></div>
       <div class="popup-body">
         <div class="popup-heading">${h.name}</div>
@@ -311,80 +326,177 @@ async function loadGpx(url){
   return gj.features.find(f=>f.geometry?.type==="LineString");
 }
 
-const routeLayerId={};
 const markerElsById={};
-let hoveredId=null;
+const routeLayers={}, routeAnims={};
+let lockedId=null;
+let hoverPopupObj=null;
 
 function setMarkerColor(id,color){
   const el=markerElsById[id];
   if(!el) return;
-  const p=el.querySelector("svg path");
+  const p=el.querySelector("path");
   if(p) p.setAttribute("fill",color);
 }
-function setRouteColor(id,color){
-  const lyr=routeLayerId[id];
-  if(lyr&&map.getLayer(lyr)) map.setPaintProperty(lyr,"line-color",color);
+
+function addRoute(h,lineFeature){
+  const id=h.id, coords=lineFeature.geometry.coordinates;
+  let dists=[0];
+  for(let i=1;i<coords.length;i++){
+    const dx=coords[i][0]-coords[i-1][0],dy=coords[i][1]-coords[i-1][1];
+    dists.push(dists[i-1]+Math.sqrt(dx*dx+dy*dy));
+  }
+  const total=dists[dists.length-1];
+  const srcBase=`rb-${id}`,srcAnim=`ra-${id}`,lyrBase=`rl-${id}`,lyrAnim=`la-${id}`;
+  map.addSource(srcBase,{type:"geojson",data:lineFeature});
+  map.addLayer({id:lyrBase,type:"line",source:srcBase,paint:{"line-color":RED,"line-width":3.5,"line-opacity":0.7}});
+  map.addSource(srcAnim,{type:"geojson",lineMetrics:true,data:{type:"Feature",geometry:{type:"LineString",coordinates:[]}}});
+  map.addLayer({id:lyrAnim,type:"line",source:srcAnim,layout:{"line-cap":"round","line-join":"round"},paint:{
+    "line-width":3.5,
+    "line-opacity":0,
+    "line-gradient":["interpolate",["linear"],["line-progress"],0,"#3899EC",1,"#FF8C00"]
+  }});
+  routeLayers[id]={srcBase,srcAnim,lyrBase,lyrAnim,coords,dists,total};
 }
-function applyHoverState(){
-  Object.keys(routeLayerId).forEach(id=>setRouteColor(id,RED));
-  Object.keys(markerElsById).forEach(id=>setMarkerColor(id,RED));
-  if(hoveredId){
-    setRouteColor(hoveredId,BLUE);
-    setMarkerColor(hoveredId,BLUE);
-    map.getCanvas().style.cursor="pointer";
-  }else{
-    map.getCanvas().style.cursor="";
+
+function showRoute(id){
+  const r=routeLayers[id]; if(!r) return;
+  map.setPaintProperty(r.lyrAnim,"line-opacity",1);
+  startAnim(id);
+}
+function hideRoute(id){
+  const r=routeLayers[id]; if(!r) return;
+  stopAnim(id);
+  map.setPaintProperty(r.lyrAnim,"line-opacity",0);
+}
+function startAnim(id){
+  stopAnim(id);
+  const r=routeLayers[id]; if(!r) return;
+  const DUR=5500; let t0=null;
+  function frame(ts){
+    if(!routeAnims[id]?.active) return;
+    if(!t0) t0=ts;
+    const prog=((ts-t0)%DUR)/DUR, dist=prog*r.total, pts=[];
+    for(let i=0;i<r.coords.length;i++){
+      if(r.dists[i]<=dist){ pts.push(r.coords[i]); }
+      else{
+        if(pts.length>0&&i>0){
+          const seg=r.dists[i]-r.dists[i-1],t=seg>0?(dist-r.dists[i-1])/seg:0;
+          const p=r.coords[i-1],q=r.coords[i];
+          pts.push([p[0]+t*(q[0]-p[0]),p[1]+t*(q[1]-p[1])]);
+        }
+        break;
+      }
+    }
+    if(pts.length>=2){ const src=map.getSource(r.srcAnim); if(src) src.setData({type:"Feature",geometry:{type:"LineString",coordinates:pts}}); }
+    routeAnims[id].raf=requestAnimationFrame(frame);
+  }
+  routeAnims[id]={active:true,raf:requestAnimationFrame(frame)};
+}
+function stopAnim(id){
+  if(routeAnims[id]){ routeAnims[id].active=false; cancelAnimationFrame(routeAnims[id].raf); delete routeAnims[id]; }
+  const r=routeLayers[id];
+  if(r){ const src=map.getSource(r.srcAnim); if(src) src.setData({type:"Feature",geometry:{type:"LineString",coordinates:[]}}); }
+}
+
+function showHoverPopup(h){
+  if(hoverPopupObj){ hoverPopupObj.remove(); hoverPopupObj=null; }
+  setMarkerColor(h.id,BLUE); showRoute(h.id);
+  hoverPopupObj=new mapboxgl.Popup({offset:22,closeButton:false,closeOnClick:false,anchor:"bottom"})
+    .setLngLat(h.coords).setHTML(popupHtmlFor(h)).addTo(map);
+}
+function hideHoverPopup(id){
+  if(lockedId===id) return;
+  if(hoverPopupObj){ hoverPopupObj.remove(); hoverPopupObj=null; }
+  hideRoute(id); setMarkerColor(id,RED);
+}
+function lockHike(h){
+  if(hoverPopupObj){ hoverPopupObj.remove(); hoverPopupObj=null; }
+  if(lockedId!==null&&lockedId!==h.id){
+    hideRoute(lockedId); setMarkerColor(lockedId,RED);
+    if(lockedPopups[lockedId]){ lockedPopups[lockedId].remove(); delete lockedPopups[lockedId]; }
+  }
+  if(lockedId===h.id){ closeLocked(); return; }
+  lockedId=h.id; setMarkerColor(h.id,BLUE); showRoute(h.id);
+  map.panTo(h.coords,{duration:300});
+  const p=new mapboxgl.Popup({offset:22,closeButton:false,closeOnClick:false,anchor:"bottom"})
+    .setLngLat(h.coords).setHTML(popupHtmlFor(h)).addTo(map);
+  lockedPopups[h.id]=p;
+}
+const lockedPopups={};
+function closeLocked(){
+  if(lockedId!==null){
+    hideRoute(lockedId); setMarkerColor(lockedId,RED);
+    if(lockedPopups[lockedId]){ lockedPopups[lockedId].remove(); delete lockedPopups[lockedId]; }
+    lockedId=null;
   }
 }
-function setHovered(id){hoveredId=id;applyHoverState();}
 
-function addRoute(id,line){
-  const src=`route-src-${id}`;
-  const lyr=`route-lyr-${id}`;
-  if(!map.getSource(src)) map.addSource(src,{type:"geojson",data:line});
-  if(!map.getLayer(lyr)) map.addLayer({
-    id:lyr,
-    type:"line",
-    source:src,
-    paint:{
-      "line-color":RED,
-      "line-width":3,
-      "line-opacity":0.95,
-      "line-color-transition":{duration:0}
-    }
-  });
-  routeLayerId[id]=lyr;
-}
+const isMobile=window.innerWidth<=768;
 
 map.on("load",async()=>{
   const bounds=new mapboxgl.LngLatBounds();
   hikes.forEach(h=>{
-    const popup=new mapboxgl.Popup({offset:22,closeButton:false}).setHTML(popupHtmlFor(h));
-    const marker=new mapboxgl.Marker({color:RED}).setLngLat(h.coords).setPopup(popup).addTo(map);
-    const el=marker.getElement();
-    el.classList.add("marker");
+    const el=document.createElement("div");
+    el.className="marker";
+    el.innerHTML=`<svg width="27" height="41" viewBox="0 0 27 41" xmlns="http://www.w3.org/2000/svg"><path d="M13.5 0C6.044 0 0 6.044 0 13.5c0 9.375 13.5 27.5 13.5 27.5S27 22.875 27 13.5C27 6.044 20.956 0 13.5 0z" fill="${RED}"/><circle cx="13.5" cy="13.5" r="5" fill="white" opacity="0.9"/></svg><div class="marker-eye-overlay"><div onclick="toggleInfo('${h.id}',event)" style="position:absolute;top:-11px;left:-11px;width:22px;height:22px;background:rgba(0,0,0,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div></div>`;
     markerElsById[h.id]=el;
-    el.addEventListener("mouseenter",()=>setHovered(h.id));
-    el.addEventListener("mouseleave",()=>setHovered(null));
+    new mapboxgl.Marker({element:el}).setLngLat(h.coords).addTo(map);
     bounds.extend(h.coords);
+    if(!isMobile){
+      el.addEventListener("mouseenter",()=>{ if(lockedId!==h.id&&!infoHiddenIds.has(h.id)) showHoverPopup(h); });
+      el.addEventListener("mouseleave",()=>{ if(lockedId!==h.id&&!infoHiddenIds.has(h.id)) hideHoverPopup(h.id); });
+    }
+    el.addEventListener("click",evt=>{ evt.stopPropagation(); if(infoHiddenIds.has(h.id)){ toggleInfo(h.id,evt); return; } lockHike(h); });
   });
+  map.on("click",()=>closeLocked());
   for(const h of hikes){
     try{
       const line=await loadGpx(h.gpx);
       if(line){
-        addRoute(h.id,line);
+        addRoute(h,line);
         line.geometry.coordinates.forEach(c=>bounds.extend(c));
-        map.on("mouseenter",routeLayerId[h.id],()=>setHovered(h.id));
-        map.on("mouseleave",routeLayerId[h.id],()=>setHovered(null));
       }
     }catch(e){}
   }
-  const isMobile=window.innerWidth<600;
   map.fitBounds(bounds,{padding:isMobile?30:110,maxZoom:isMobile?14:10.5});
   if(isMobile){
     map.once("idle",()=>{if(map.getZoom()>11.6) map.setZoom(11.6);});
   }
 });
+
+const infoHiddenIds=new Set();
+
+window.toggleInfo=function(id,evt){
+  if(evt) evt.stopPropagation();
+  const el=markerElsById[id];
+  if(infoHiddenIds.has(id)){
+    infoHiddenIds.delete(id);
+    const popup=lockedPopups[id];
+    if(popup){ popup.getElement().style.opacity="1"; popup.getElement().style.pointerEvents="auto"; }
+    if(el) el.classList.remove("info-hidden");
+    return;
+  }
+  const h=hikes.find(x=>x.id===id); if(!h) return;
+  if(!lockedPopups[id]){
+    if(hoverPopupObj){ hoverPopupObj.remove(); hoverPopupObj=null; }
+    if(lockedId!==null&&lockedId!==id){
+      hideRoute(lockedId);
+      if(lockedPopups[lockedId]){ lockedPopups[lockedId].remove(); delete lockedPopups[lockedId]; }
+      setMarkerColor(lockedId,RED);
+      infoHiddenIds.delete(lockedId);
+      if(markerElsById[lockedId]) markerElsById[lockedId].classList.remove("info-hidden");
+    }
+    lockedId=id;
+    const p=new mapboxgl.Popup({offset:22,closeButton:false,closeOnClick:false,anchor:"bottom"})
+      .setLngLat(h.coords).setHTML(popupHtmlFor(h)).addTo(map);
+    lockedPopups[id]=p;
+  }
+  const popup=lockedPopups[id]; if(!popup) return;
+  infoHiddenIds.add(id);
+  popup.getElement().style.opacity="0";
+  popup.getElement().style.pointerEvents="none";
+  if(el) el.classList.add("info-hidden");
+};
 </script>
 </body>
 </html>
